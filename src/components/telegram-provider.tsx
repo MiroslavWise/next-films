@@ -51,6 +51,26 @@ function applyThemeFromSdk() {
   }
 }
 
+function px(value: number | undefined) {
+  return `${Math.max(0, value ?? 0)}px`
+}
+
+function applySafeAreaCss() {
+  const root = document.documentElement
+  try {
+    root.style.setProperty("--tg-safe-area-inset-top", px(viewport.safeAreaInsetTop()))
+    root.style.setProperty("--tg-safe-area-inset-right", px(viewport.safeAreaInsetRight()))
+    root.style.setProperty("--tg-safe-area-inset-bottom", px(viewport.safeAreaInsetBottom()))
+    root.style.setProperty("--tg-safe-area-inset-left", px(viewport.safeAreaInsetLeft()))
+    root.style.setProperty("--tg-content-safe-area-inset-top", px(viewport.contentSafeAreaInsetTop()))
+    root.style.setProperty("--tg-content-safe-area-inset-right", px(viewport.contentSafeAreaInsetRight()))
+    root.style.setProperty("--tg-content-safe-area-inset-bottom", px(viewport.contentSafeAreaInsetBottom()))
+    root.style.setProperty("--tg-content-safe-area-inset-left", px(viewport.contentSafeAreaInsetLeft()))
+  } catch {
+    // вне Telegram оставляем 0
+  }
+}
+
 export function TelegramProvider({ children }: { children: ReactNode }) {
   const setBoot = useSessionStore((state) => state.setBoot)
 
@@ -77,6 +97,10 @@ export function TelegramProvider({ children }: { children: ReactNode }) {
               // Fullscreen может быть недоступен на части клиентов.
             }
           }
+          applySafeAreaCss()
+          // После fullscreen/layout Telegram обновляет inset асинхронно.
+          window.setTimeout(applySafeAreaCss, 50)
+          window.setTimeout(applySafeAreaCss, 300)
         }
         if (available(mainButton.mount)) mainButton.mount()
         if (available(backButton.mount)) backButton.mount()
@@ -86,6 +110,7 @@ export function TelegramProvider({ children }: { children: ReactNode }) {
         }
         if (available(miniApp.ready)) miniApp.ready()
         applyThemeFromSdk()
+        applySafeAreaCss()
         rawInitData = retrieveRawInitData() ?? initData.raw() ?? ""
         isTelegram = rawInitData.length > 0
         colorScheme = miniApp.isDark() ? "dark" : "light"

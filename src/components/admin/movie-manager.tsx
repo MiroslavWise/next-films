@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { AdminFrame, buttonClass, fieldClass } from "@/components/admin/admin-frame";
+import { FileUploadField } from "@/components/admin/file-upload-field";
 import { BlurImage } from "@/components/blur-image";
 import { ApiRequestError, api, uploadPhoto } from "@/lib/api-client";
 import { copy } from "@/lib/constants";
@@ -134,18 +135,12 @@ export function MovieManager() {
           {copy.admin.titleField}
           <input className={fieldClass} value={title} onChange={(event) => setTitle(event.target.value)} required />
         </label>
-        <label className="grid gap-1 text-sm">
-          {copy.admin.poster}
-          <span className="text-xs text-[var(--tg-theme-hint-color)]">
-            {editing ? copy.admin.optional : copy.admin.required}
-          </span>
-          <input
-            className="text-sm"
-            type="file"
-            accept="image/jpeg,image/png,image/webp,image/avif,image/gif"
-            onChange={(event) => setFile(event.target.files?.[0] ?? null)}
-          />
-        </label>
+        <FileUploadField
+          label={copy.admin.poster}
+          hint={editing ? copy.admin.optional : copy.admin.required}
+          fileName={file?.name ?? null}
+          onChange={setFile}
+        />
         <CheckList
           title={copy.admin.genres}
           items={catalog.genres}

@@ -8,6 +8,14 @@
   --tg-theme-button-color: #9a3412;
   --tg-theme-button-text-color: #fffaf5;
   --tg-theme-secondary-bg-color: #fffdf9;
+  --tg-safe-area-inset-top: 0px;
+  --tg-safe-area-inset-right: 0px;
+  --tg-safe-area-inset-bottom: 0px;
+  --tg-safe-area-inset-left: 0px;
+  --tg-content-safe-area-inset-top: 0px;
+  --tg-content-safe-area-inset-right: 0px;
+  --tg-content-safe-area-inset-bottom: 0px;
+  --tg-content-safe-area-inset-left: 0px;
   --font-sans: var(--font-manrope), "Segoe UI", sans-serif;
 }
 
@@ -42,8 +50,22 @@ html[data-theme="dark"] {
 }
 
 body {
-  padding-top: env(safe-area-inset-top);
-  padding-bottom: env(safe-area-inset-bottom);
+  /* Системные inset (вырез, home indicator, Android nav) + content inset Telegram (шапка Mini App). */
+  padding-top: calc(
+    max(env(safe-area-inset-top, 0px), var(--tg-safe-area-inset-top, 0px)) + var(--tg-content-safe-area-inset-top, 0px)
+  );
+  padding-right: calc(
+    max(env(safe-area-inset-right, 0px), var(--tg-safe-area-inset-right, 0px)) +
+      var(--tg-content-safe-area-inset-right, 0px)
+  );
+  padding-bottom: calc(
+    max(env(safe-area-inset-bottom, 0px), var(--tg-safe-area-inset-bottom, 0px)) +
+      var(--tg-content-safe-area-inset-bottom, 0px)
+  );
+  padding-left: calc(
+    max(env(safe-area-inset-left, 0px), var(--tg-safe-area-inset-left, 0px)) +
+      var(--tg-content-safe-area-inset-left, 0px)
+  );
   font-family: var(--font-sans);
 }
 

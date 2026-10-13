@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { AdminFrame, buttonClass, fieldClass } from "@/components/admin/admin-frame";
+import { FileUploadField } from "@/components/admin/file-upload-field";
 import { ApiRequestError, api, uploadPhoto } from "@/lib/api-client";
 import { copy } from "@/lib/constants";
 import { useTelegram } from "@/lib/telegram/use-telegram";
@@ -83,16 +84,12 @@ export function PersonManager({ kind, title }: { kind: PersonKind; title: string
           {copy.admin.name}
           <input className={fieldClass} value={name} onChange={(event) => setName(event.target.value)} required />
         </label>
-        <label className="grid gap-1 text-sm">
-          {copy.admin.photo}
-          <span className="text-xs text-[var(--tg-theme-hint-color)]">{copy.admin.optional}</span>
-          <input
-            className="text-sm"
-            type="file"
-            accept="image/jpeg,image/png,image/webp,image/avif,image/gif"
-            onChange={(event) => setFile(event.target.files?.[0] ?? null)}
-          />
-        </label>
+        <FileUploadField
+          label={copy.admin.photo}
+          hint={copy.admin.optional}
+          fileName={file?.name ?? null}
+          onChange={setFile}
+        />
         <div className="flex gap-2">
           <button className={buttonClass} type="submit" disabled={pending}>
             {editing ? copy.admin.save : copy.admin.add}

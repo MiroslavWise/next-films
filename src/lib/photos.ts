@@ -21,14 +21,21 @@ export function isBlobUrl(url: string) {
   }
 }
 
+function blobToken() {
+  return process.env.BLOB_READ_WRITE_TOKEN?.trim() || ""
+}
+
 export async function deleteStoredPhoto(url: string | null | undefined) {
-  if (!url || !isBlobUrl(url)) return;
-  await del(url, { token: process.env.BLOB_READ_WRITE_TOKEN });
+  if (!url || !isBlobUrl(url)) return
+  const token = blobToken()
+  if (!token) return
+  await del(url, { token })
 }
 
 export async function storePhoto(file: File, kind: "poster" | "portrait") {
-  if (!process.env.BLOB_READ_WRITE_TOKEN) {
-    return { ok: false as const, status: 500, error: "Хранилище фотографий не настроено" };
+  const token = blobToken()
+  if (!token) {
+    return { ok: false as const, status: 500, error: "Хранилище фотографий не настроено" }
   }
   if (!allowedTypes.has(file.type)) {
     return { ok: false as const, status: 400, error: copy.admin.photoType };
@@ -53,8 +60,8 @@ export async function storePhoto(file: File, kind: "poster" | "portrait") {
   const blob = await put(`${folder}/${crypto.randomUUID()}.avif`, avif, {
     access: "public",
     contentType: "image/avif",
-    token: process.env.BLOB_READ_WRITE_TOKEN,
-  });
+    token,
+  })
 
-  return { ok: true as const, url: blob.url, blurhash };
+  return { ok: true as const, url: blob.url, blurhash }
 }

@@ -7,7 +7,7 @@ import { useBackNavigation } from "@/lib/telegram/use-back-navigation"
 import { useTelegram } from "@/lib/telegram/use-telegram"
 
 export const fieldClass =
-  "h-11 w-full rounded-2xl border-0 bg-[var(--tg-theme-bg-color)] px-3 text-sm outline-none"
+  "h-11 w-full rounded-2xl border border-[color-mix(in_srgb,var(--tg-theme-hint-color)_45%,transparent)] bg-[var(--tg-theme-bg-color)] px-3 text-sm text-[var(--tg-theme-text-color)] outline-none focus:border-[var(--tg-theme-button-color)]"
 
 export const buttonClass =
   "inline-flex h-11 items-center justify-center rounded-full bg-[var(--tg-theme-button-color)] px-5 text-sm font-semibold text-[var(--tg-theme-button-text-color)] disabled:opacity-40"

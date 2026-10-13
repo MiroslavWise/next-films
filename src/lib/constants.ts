@@ -61,6 +61,7 @@ export const copy = {
     posterRequired: "Добавьте постер",
     emptyList: "Пока пусто",
     replacePhoto: "Заменить фото",
+    chooseFile: "Нажмите, чтобы выбрать файл",
   },
 } as const
 
