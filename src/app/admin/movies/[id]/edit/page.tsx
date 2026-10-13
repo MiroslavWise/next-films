@@ -1,6 +1,6 @@
 import { Suspense } from "react"
 import { MovieForm } from "@/components/admin/movie-form"
-import { copy } from "@/lib/constants"
+import { MovieFormSkeleton } from "@/components/admin/admin-skeletons"
 
 /** Нужен хотя бы один sample-param, чтобы Cache Components смог собрать App Shell. */
 export function generateStaticParams() {
@@ -9,7 +9,13 @@ export function generateStaticParams() {
 
 export default function EditMoviePage({ params }: { params: Promise<{ id: string }> }) {
   return (
-    <Suspense fallback={<p className="px-4 py-5 text-sm text-(--tg-theme-hint-color)">{copy.loading}</p>}>
+    <Suspense
+      fallback={
+        <main className="mx-auto flex w-full max-w-lg flex-col gap-5 px-4 py-5">
+          <MovieFormSkeleton />
+        </main>
+      }
+    >
       <EditMovieContent params={params} />
     </Suspense>
   )

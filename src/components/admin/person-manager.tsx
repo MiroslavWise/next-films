@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { AdminFrame, FormMessage } from "@/components/admin/admin-frame"
+import { RowsListSkeleton } from "@/components/admin/admin-skeletons"
 import { FileUploadField } from "@/components/admin/file-upload-field"
 import { adminKeys, usePeopleQuery } from "@/lib/admin-queries"
 import { ApiRequestError, api, uploadPhoto } from "@/lib/api-client"
@@ -134,39 +135,41 @@ export function PersonManager({ kind, title }: { kind: PersonKind; title: string
       </form>
       {message ? <FormMessage tone="ok">{message}</FormMessage> : null}
       {error || loadError ? <FormMessage tone="error">{error || loadError}</FormMessage> : null}
-      {peopleQuery.isPending ? <p className="text-sm text-(--tg-theme-hint-color)">{copy.loading}</p> : null}
-      <ul className={`${panelClass} divide-y divide-(--surface-border) p-0`}>
-        {!peopleQuery.isPending && people.length === 0 ? (
-          <li className="px-4 py-3 text-sm text-(--tg-theme-hint-color)">{copy.admin.emptyList}</li>
-        ) : null}
-        {people.map((person) => (
-          <li key={person.id} className="flex items-center justify-between gap-3 px-4 py-3">
-            <span className="font-medium">{person.name}</span>
-            <span className="flex gap-4">
-              <button
-                type="button"
-                className={linkActionClass}
-                onClick={() => {
-                  setEditing(person)
-                  setName(person.name)
-                  setFile(null)
-                  setFileKey((value) => value + 1)
-                }}
-              >
-                {copy.admin.edit}
-              </button>
-              <button
-                type="button"
-                className={dangerActionClass}
-                disabled={deleteMutation.isPending}
-                onClick={() => void onDelete(person)}
-              >
-                {copy.admin.delete}
-              </button>
-            </span>
-          </li>
-        ))}
-      </ul>
+      {peopleQuery.isPending ? <RowsListSkeleton /> : null}
+      {!peopleQuery.isPending ? (
+        <ul className={`${panelClass} divide-y divide-(--surface-border) p-0`}>
+          {people.length === 0 ? (
+            <li className="px-4 py-3 text-sm text-(--tg-theme-hint-color)">{copy.admin.emptyList}</li>
+          ) : null}
+          {people.map((person) => (
+            <li key={person.id} className="flex items-center justify-between gap-3 px-4 py-3">
+              <span className="font-medium">{person.name}</span>
+              <span className="flex gap-4">
+                <button
+                  type="button"
+                  className={linkActionClass}
+                  onClick={() => {
+                    setEditing(person)
+                    setName(person.name)
+                    setFile(null)
+                    setFileKey((value) => value + 1)
+                  }}
+                >
+                  {copy.admin.edit}
+                </button>
+                <button
+                  type="button"
+                  className={dangerActionClass}
+                  disabled={deleteMutation.isPending}
+                  onClick={() => void onDelete(person)}
+                >
+                  {copy.admin.delete}
+                </button>
+              </span>
+            </li>
+          ))}
+        </ul>
+      ) : null}
     </AdminFrame>
   )
 }

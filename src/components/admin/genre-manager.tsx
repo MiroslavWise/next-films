@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { AdminFrame, FormMessage } from "@/components/admin/admin-frame"
+import { RowsListSkeleton } from "@/components/admin/admin-skeletons"
 import { adminKeys, useGenresQuery } from "@/lib/admin-queries"
 import { ApiRequestError, api } from "@/lib/api-client"
 import { copy } from "@/lib/constants"
@@ -108,37 +109,39 @@ export function GenreManager() {
       </form>
       {message ? <FormMessage tone="ok">{message}</FormMessage> : null}
       {error || loadError ? <FormMessage tone="error">{error || loadError}</FormMessage> : null}
-      {genresQuery.isPending ? <p className="text-sm text-(--tg-theme-hint-color)">{copy.loading}</p> : null}
-      <ul className={`${panelClass} divide-y divide-(--surface-border) p-0`}>
-        {!genresQuery.isPending && genres.length === 0 ? (
-          <li className="px-4 py-3 text-sm text-(--tg-theme-hint-color)">{copy.admin.emptyList}</li>
-        ) : null}
-        {genres.map((genre) => (
-          <li key={genre.id} className="flex items-center justify-between gap-3 px-4 py-3">
-            <span className="font-medium">{genre.name}</span>
-            <span className="flex gap-4">
-              <button
-                type="button"
-                className={linkActionClass}
-                onClick={() => {
-                  setEditing(genre)
-                  setName(genre.name)
-                }}
-              >
-                {copy.admin.edit}
-              </button>
-              <button
-                type="button"
-                className={dangerActionClass}
-                disabled={deleteMutation.isPending}
-                onClick={() => void onDelete(genre)}
-              >
-                {copy.admin.delete}
-              </button>
-            </span>
-          </li>
-        ))}
-      </ul>
+      {genresQuery.isPending ? <RowsListSkeleton /> : null}
+      {!genresQuery.isPending ? (
+        <ul className={`${panelClass} divide-y divide-(--surface-border) p-0`}>
+          {genres.length === 0 ? (
+            <li className="px-4 py-3 text-sm text-(--tg-theme-hint-color)">{copy.admin.emptyList}</li>
+          ) : null}
+          {genres.map((genre) => (
+            <li key={genre.id} className="flex items-center justify-between gap-3 px-4 py-3">
+              <span className="font-medium">{genre.name}</span>
+              <span className="flex gap-4">
+                <button
+                  type="button"
+                  className={linkActionClass}
+                  onClick={() => {
+                    setEditing(genre)
+                    setName(genre.name)
+                  }}
+                >
+                  {copy.admin.edit}
+                </button>
+                <button
+                  type="button"
+                  className={dangerActionClass}
+                  disabled={deleteMutation.isPending}
+                  onClick={() => void onDelete(genre)}
+                >
+                  {copy.admin.delete}
+                </button>
+              </span>
+            </li>
+          ))}
+        </ul>
+      ) : null}
     </AdminFrame>
   )
 }

@@ -4,6 +4,7 @@ import Link from "next/link"
 import { useState } from "react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { AdminFrame, FormMessage } from "@/components/admin/admin-frame"
+import { MovieListSkeleton } from "@/components/admin/admin-skeletons"
 import { BlurImage } from "@/components/blur-image"
 import { adminKeys, useMoviesPageQuery } from "@/lib/admin-queries"
 import { ApiRequestError, api } from "@/lib/api-client"
@@ -55,7 +56,7 @@ export function MovieList() {
       {message ? <FormMessage tone="ok">{message}</FormMessage> : null}
       {error || loadError ? <FormMessage tone="error">{error || loadError}</FormMessage> : null}
 
-      {moviesQuery.isPending ? <p className="text-sm text-(--tg-theme-hint-color)">{copy.loading}</p> : null}
+      {moviesQuery.isPending ? <MovieListSkeleton /> : null}
 
       {moviesPage ? (
         <>

@@ -4,6 +4,7 @@ import Link from "next/link"
 import { useEffect, useState } from "react"
 
 import { FormMessage } from "@/components/admin/admin-frame"
+import { AdminNavSkeleton } from "@/components/admin/admin-skeletons"
 import { panelClass } from "@/lib/ui"
 import { copy } from "@/lib/constants"
 import { ApiRequestError, api } from "@/lib/api-client"
@@ -52,7 +53,7 @@ export default function AdminPage() {
         <h1 className="text-2xl font-semibold tracking-tight">{copy.admin.title}</h1>
         <p className="mt-1 text-sm text-(--tg-theme-hint-color)">Каталог фильмов и людей</p>
       </header>
-      {state === "loading" ? <p className="text-sm text-(--tg-theme-hint-color)">{copy.loading}</p> : null}
+      {state === "loading" ? <AdminNavSkeleton /> : null}
       {state === "denied" ? <FormMessage tone="error">{copy.admin.noAccess}</FormMessage> : null}
       {state === "telegram" ? <FormMessage tone="error">{copy.openInTelegram}</FormMessage> : null}
       {state === "ok" ? (

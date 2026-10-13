@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type FormEvent } from "react"
 import { AdminFrame, FormMessage } from "@/components/admin/admin-frame"
+import { MovieFormSkeleton } from "@/components/admin/admin-skeletons"
 import { FileUploadField } from "@/components/admin/file-upload-field"
 import { useCatalogRefsQuery, useMovieQuery, useSaveMovieMutation } from "@/lib/admin-queries"
 import { ApiRequestError } from "@/lib/api-client"
@@ -102,7 +103,7 @@ export function MovieForm({ mode, movieId }: { mode: "create" | "edit"; movieId?
       {message ? <FormMessage tone="ok">{message}</FormMessage> : null}
       {error || loadError ? <FormMessage tone="error">{error || loadError}</FormMessage> : null}
 
-      {loading ? <p className="text-sm text-(--tg-theme-hint-color)">{copy.loading}</p> : null}
+      {loading ? <MovieFormSkeleton /> : null}
 
       {!loading && (mode === "create" || movieQuery.data) ? (
         <form onSubmit={onSubmit} className={`${panelClass} grid gap-4`}>
