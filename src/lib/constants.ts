@@ -62,14 +62,23 @@ export const copy = {
     emptyList: "Пока пусто",
     replacePhoto: "Заменить фото",
     chooseFile: "Нажмите, чтобы выбрать файл",
+    prevPage: "Назад",
+    nextPage: "Далее",
+    pageOf: "Стр.",
+    closeForm: "Закрыть",
   },
 } as const
 
 export const ROUND_SIZE = 3
+export const ADMIN_MOVIES_PAGE_SIZE = 20
 export const MAX_UPLOAD_BYTES = 4 * 1024 * 1024
-export const POSTER_MAX_WIDTH = 1200
-export const PORTRAIT_MAX_WIDTH = 800
-export const AVIF_QUALITY = 50
+/** Для мини-приложения хватает ~800px по ширине; сильнее режет вес. */
+export const POSTER_MAX_WIDTH = 800
+export const PORTRAIT_MAX_WIDTH = 640
+/** 1–100; ниже = меньше файл. 38 даёт заметное сжатие без сильной мыльности на постерах. */
+export const AVIF_QUALITY = 38
+/** 0–9; выше = сильнее сжатие, дольше CPU. */
+export const AVIF_EFFORT = 6
 export const INIT_DATA_MAX_AGE_SECONDS = 60 * 60 * 24
 export const JWT_TTL_SECONDS = 60 * 60 * 12
 // Библиотека blurhash принимает только 1..9 компонент по каждой оси.

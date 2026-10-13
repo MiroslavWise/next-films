@@ -13,20 +13,27 @@ import {
 import { FileUploadField } from "@/components/admin/file-upload-field"
 import { BlurImage } from "@/components/blur-image"
 import { ApiRequestError, api, uploadPhoto } from "@/lib/api-client"
-import { copy } from "@/lib/constants"
+import { ADMIN_MOVIES_PAGE_SIZE, copy } from "@/lib/constants"
 import { useTelegram } from "@/lib/telegram/use-telegram"
 import { uuidv7 } from "@/lib/uuid"
 import type { MovieRecord, NamedRef, PersonRecord } from "@/types/api"
 
-type Catalog = {
-  movies: MovieRecord[]
+type Refs = {
   genres: NamedRef[]
   actors: PersonRecord[]
   directors: PersonRecord[]
   producers: PersonRecord[]
 }
 
-const emptyCatalog: Catalog = { movies: [], genres: [], actors: [], directors: [], producers: [] }
+type MoviesPage = {
+  movies: MovieRecord[]
+  total: number
+  page: number
+  pageSize: number
+  pageCount: number
+}
+
+const emptyRefs: Refs = { genres: [], actors: [], directors: [], producers: [] }
 
 function toggle(ids: string[], id: string) {
   return ids.includes(id) ? ids.filter((item) => item !== id) : [...ids, id]
@@ -34,10 +41,20 @@ function toggle(ids: string[], id: string) {
 
 export function MovieManager() {
   const { ready } = useTelegram()
-  const [catalog, setCatalog] = useState<Catalog>(emptyCatalog)
+  const [refs, setRefs] = useState<Refs>(emptyRefs)
+  const [moviesPage, setMoviesPage] = useState<MoviesPage>({
+    movies: [],
+    total: 0,
+    page: 1,
+    pageSize: ADMIN_MOVIES_PAGE_SIZE,
+    pageCount: 1,
+  })
+  const [page, setPage] = useState(1)
+  const [formOpen, setFormOpen] = useState(false)
   const [editing, setEditing] = useState<MovieRecord | null>(null)
   const [title, setTitle] = useState("")
   const [file, setFile] = useState<File | null>(null)
+  const [fileKey, setFileKey] = useState(0)
   const [genreIds, setGenreIds] = useState<string[]>([])
   const [actorIds, setActorIds] = useState<string[]>([])
   const [directorIds, setDirectorIds] = useState<string[]>([])
@@ -46,16 +63,14 @@ export function MovieManager() {
   const [error, setError] = useState("")
   const [pending, setPending] = useState(false)
 
-  const load = useCallback(async () => {
-    const [movies, genres, actors, directors, producers] = await Promise.all([
-      api<{ movies: MovieRecord[] }>("/api/admin/movies"),
+  const loadRefs = useCallback(async () => {
+    const [genres, actors, directors, producers] = await Promise.all([
       api<{ genres: NamedRef[] }>("/api/admin/genres"),
       api<{ people: PersonRecord[] }>("/api/admin/people/actors"),
       api<{ people: PersonRecord[] }>("/api/admin/people/directors"),
       api<{ people: PersonRecord[] }>("/api/admin/people/producers"),
     ])
-    setCatalog({
-      movies: movies.movies,
+    setRefs({
       genres: genres.genres,
       actors: actors.people,
       directors: directors.people,
@@ -63,30 +78,64 @@ export function MovieManager() {
     })
   }, [])
 
+  const loadMovies = useCallback(async (nextPage: number) => {
+    const data = await api<MoviesPage>(`/api/admin/movies?page=${nextPage}&pageSize=${ADMIN_MOVIES_PAGE_SIZE}`)
+    setMoviesPage(data)
+    setPage(data.page)
+  }, [])
+
   useEffect(() => {
     if (!ready) return
     const timeout = window.setTimeout(() => {
-      void load().catch((caught: unknown) => {
+      void Promise.all([loadRefs(), loadMovies(1)]).catch((caught: unknown) => {
         setError(caught instanceof ApiRequestError ? caught.message : copy.internal)
       })
     }, 0)
     return () => window.clearTimeout(timeout)
-  }, [ready, load])
+  }, [ready, loadRefs, loadMovies])
 
-  function resetForm() {
+  function resetFormFields() {
     setEditing(null)
     setTitle("")
     setFile(null)
+    setFileKey((value) => value + 1)
     setGenreIds([])
     setActorIds([])
     setDirectorIds([])
     setProducerIds([])
   }
 
+  function closeForm() {
+    resetFormFields()
+    setFormOpen(false)
+  }
+
+  function openCreate() {
+    resetFormFields()
+    setMessage("")
+    setError("")
+    setFormOpen(true)
+  }
+
+  function openEdit(movie: MovieRecord) {
+    setEditing(movie)
+    setTitle(movie.title)
+    setFile(null)
+    setFileKey((value) => value + 1)
+    setGenreIds(movie.genres.map((item) => item.id))
+    setActorIds(movie.actors.map((item) => item.id))
+    setDirectorIds(movie.directors.map((item) => item.id))
+    setProducerIds(movie.producers.map((item) => item.id))
+    setMessage("")
+    setError("")
+    setFormOpen(true)
+  }
+
   async function onSubmit(event: FormEvent) {
     event.preventDefault()
     if (!editing && !file) {
       setError(copy.admin.posterRequired)
+      setMessage("")
       return
     }
     setPending(true)
@@ -116,10 +165,12 @@ export function MovieManager() {
       } else {
         await api("/api/admin/movies", { method: "POST", body })
       }
-      resetForm()
+      resetFormFields()
+      setFormOpen(false)
       setMessage(copy.admin.saved)
-      await load()
+      await loadMovies(editing ? page : 1)
     } catch (caught) {
+      setMessage("")
       setError(caught instanceof ApiRequestError ? caught.message : copy.internal)
     } finally {
       setPending(false)
@@ -129,11 +180,13 @@ export function MovieManager() {
   async function onDelete(movie: MovieRecord) {
     if (!window.confirm(`${copy.admin.delete}: ${movie.title}?`)) return
     setError("")
+    setMessage("")
     try {
       await api(`/api/admin/movies/${movie.id}`, { method: "DELETE" })
-      if (editing?.id === movie.id) resetForm()
+      if (editing?.id === movie.id) closeForm()
       setMessage(copy.admin.deleted)
-      await load()
+      const nextPage = moviesPage.movies.length <= 1 && page > 1 ? page - 1 : page
+      await loadMovies(nextPage)
     } catch (caught) {
       setError(caught instanceof ApiRequestError ? caught.message : copy.internal)
     }
@@ -141,56 +194,68 @@ export function MovieManager() {
 
   return (
     <AdminFrame title={copy.admin.movies}>
-      <form onSubmit={onSubmit} className={`${panelClass} grid gap-4`}>
-        <label className="grid gap-2 text-sm">
-          <span className="font-medium">{copy.admin.titleField}</span>
-          <input className={fieldClass} value={title} onChange={(event) => setTitle(event.target.value)} required />
-        </label>
-        <FileUploadField
-          label={copy.admin.poster}
-          hint={editing ? copy.admin.optional : copy.admin.required}
-          fileName={file?.name ?? null}
-          onChange={setFile}
-        />
-        <CheckList
-          title={copy.admin.genres}
-          items={catalog.genres}
-          selected={genreIds}
-          onToggle={(id) => setGenreIds((current) => toggle(current, id))}
-        />
-        <CheckList
-          title={copy.admin.actors}
-          items={catalog.actors}
-          selected={actorIds}
-          onToggle={(id) => setActorIds((current) => toggle(current, id))}
-        />
-        <CheckList
-          title={copy.admin.directors}
-          items={catalog.directors}
-          selected={directorIds}
-          onToggle={(id) => setDirectorIds((current) => toggle(current, id))}
-        />
-        <CheckList
-          title={copy.admin.producers}
-          items={catalog.producers}
-          selected={producerIds}
-          onToggle={(id) => setProducerIds((current) => toggle(current, id))}
-        />
-        <div className="flex flex-wrap gap-2 pt-1">
-          <button className={buttonClass} type="submit" disabled={pending}>
-            {editing ? copy.admin.save : copy.admin.add}
-          </button>
-          {editing ? (
-            <button className={ghostButtonClass} type="button" onClick={resetForm}>
-              {copy.admin.cancel}
-            </button>
-          ) : null}
-        </div>
-      </form>
+      {!formOpen ? (
+        <button className={buttonClass} type="button" onClick={openCreate}>
+          {copy.admin.add}
+        </button>
+      ) : null}
+
       {message ? <FormMessage tone="ok">{message}</FormMessage> : null}
       {error ? <FormMessage tone="error">{error}</FormMessage> : null}
+
+      {formOpen ? (
+        <form onSubmit={onSubmit} className={`${panelClass} grid gap-4`}>
+          <label className="grid gap-2 text-sm">
+            <span className="font-medium">{copy.admin.titleField}</span>
+            <input className={fieldClass} value={title} onChange={(event) => setTitle(event.target.value)} required />
+          </label>
+          <FileUploadField
+            label={copy.admin.poster}
+            hint={editing ? copy.admin.optional : copy.admin.required}
+            fileName={file?.name ?? null}
+            resetKey={fileKey}
+            onChange={setFile}
+          />
+          <CheckList
+            title={copy.admin.genres}
+            items={refs.genres}
+            selected={genreIds}
+            onToggle={(id) => setGenreIds((current) => toggle(current, id))}
+          />
+          <CheckList
+            title={copy.admin.actors}
+            items={refs.actors}
+            selected={actorIds}
+            onToggle={(id) => setActorIds((current) => toggle(current, id))}
+          />
+          <CheckList
+            title={copy.admin.directors}
+            items={refs.directors}
+            selected={directorIds}
+            onToggle={(id) => setDirectorIds((current) => toggle(current, id))}
+          />
+          <CheckList
+            title={copy.admin.producers}
+            items={refs.producers}
+            selected={producerIds}
+            onToggle={(id) => setProducerIds((current) => toggle(current, id))}
+          />
+          <div className="flex flex-wrap gap-2 pt-1">
+            <button className={buttonClass} type="submit" disabled={pending}>
+              {editing ? copy.admin.save : copy.admin.add}
+            </button>
+            <button className={ghostButtonClass} type="button" onClick={closeForm}>
+              {editing ? copy.admin.cancel : copy.admin.closeForm}
+            </button>
+          </div>
+        </form>
+      ) : null}
+
       <ul className="grid gap-3">
-        {catalog.movies.map((movie) => (
+        {moviesPage.movies.length === 0 ? (
+          <li className={`${panelClass} text-sm text-(--tg-theme-hint-color)`}>{copy.admin.emptyList}</li>
+        ) : null}
+        {moviesPage.movies.map((movie) => (
           <li key={movie.id} className={`${panelClass} flex gap-3 p-3`}>
             <div className="relative h-24 w-16 shrink-0 overflow-hidden rounded-[var(--radius-sm)]">
               <BlurImage src={movie.posterUrl} alt={movie.title} blurhash={movie.posterBlurhash} sizes="64px" />
@@ -201,19 +266,7 @@ export function MovieManager() {
                 {movie.watchManyCount} / {movie.onceEnoughCount} / {movie.removeFromIndustryCount}
               </p>
               <div className="mt-3 flex gap-4">
-                <button
-                  type="button"
-                  className={linkActionClass}
-                  onClick={() => {
-                    setEditing(movie)
-                    setTitle(movie.title)
-                    setFile(null)
-                    setGenreIds(movie.genres.map((item) => item.id))
-                    setActorIds(movie.actors.map((item) => item.id))
-                    setDirectorIds(movie.directors.map((item) => item.id))
-                    setProducerIds(movie.producers.map((item) => item.id))
-                  }}
-                >
+                <button type="button" className={linkActionClass} onClick={() => openEdit(movie)}>
                   {copy.admin.edit}
                 </button>
                 <button type="button" className={dangerActionClass} onClick={() => void onDelete(movie)}>
@@ -224,6 +277,30 @@ export function MovieManager() {
           </li>
         ))}
       </ul>
+
+      {moviesPage.pageCount > 1 ? (
+        <div className="flex items-center justify-between gap-3">
+          <button
+            type="button"
+            className={ghostButtonClass}
+            disabled={page <= 1 || pending}
+            onClick={() => void loadMovies(page - 1)}
+          >
+            {copy.admin.prevPage}
+          </button>
+          <p className="text-sm text-(--tg-theme-hint-color)">
+            {copy.admin.pageOf} {moviesPage.page} / {moviesPage.pageCount}
+          </p>
+          <button
+            type="button"
+            className={ghostButtonClass}
+            disabled={page >= moviesPage.pageCount || pending}
+            onClick={() => void loadMovies(page + 1)}
+          >
+            {copy.admin.nextPage}
+          </button>
+        </div>
+      ) : null}
     </AdminFrame>
   )
 }

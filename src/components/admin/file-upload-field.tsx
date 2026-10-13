@@ -7,6 +7,7 @@ type Props = {
   hint?: string
   fileName?: string | null
   accept?: string
+  resetKey?: string | number
   onChange: (file: File | null) => void
 }
 
@@ -15,6 +16,7 @@ export function FileUploadField({
   hint,
   fileName,
   accept = "image/jpeg,image/png,image/webp,image/avif,image/gif",
+  resetKey = 0,
   onChange,
 }: Props) {
   return (
@@ -30,6 +32,7 @@ export function FileUploadField({
       >
         {fileName ? <span className="truncate font-medium">{fileName}</span> : <span>{copy.admin.chooseFile}</span>}
         <input
+          key={resetKey}
           className="sr-only"
           type="file"
           accept={accept}

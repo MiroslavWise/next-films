@@ -2,6 +2,7 @@ import { del, put } from "@vercel/blob"
 import { encode } from "blurhash"
 import sharp from "sharp"
 import {
+  AVIF_EFFORT,
   AVIF_QUALITY,
   BLURHASH_X,
   BLURHASH_Y,
@@ -49,11 +50,22 @@ export async function storePhoto(file: File, kind: "poster" | "portrait", entity
   const id = entityId && isUuid(entityId) ? entityId : uuidv7()
   const width = kind === "poster" ? POSTER_MAX_WIDTH : PORTRAIT_MAX_WIDTH
   const input = Buffer.from(await file.arrayBuffer())
-  const base = sharp(input).rotate().resize({ width, withoutEnlargement: true })
+
+  // resize + сброс метаданных + без альфы → ощутимо меньший AVIF, чем «просто смена расширения»
+  const base = sharp(input, { failOn: "none" })
+    .rotate()
+    .resize({ width, withoutEnlargement: true, fit: "inside" })
+    .removeAlpha()
 
   const { data, info } = await base.clone().ensureAlpha().raw().toBuffer({ resolveWithObject: true })
   const blurhash = encode(new Uint8ClampedArray(data), info.width, info.height, BLURHASH_X, BLURHASH_Y)
-  const avif = await base.avif({ quality: AVIF_QUALITY }).toBuffer()
+  const avif = await base
+    .avif({
+      quality: AVIF_QUALITY,
+      effort: AVIF_EFFORT,
+      chromaSubsampling: "4:2:0",
+    })
+    .toBuffer()
 
   const folder = kind === "poster" ? "posters" : "people"
   const pathname = `${folder}/${id}.avif`

@@ -53,12 +53,28 @@ function toMovie(movie: MovieWithRelations): MovieRecord {
   };
 }
 
-export async function listMovies() {
-  const movies = await prisma.movie.findMany({
-    include: movieInclude,
-    orderBy: { title: "asc" },
-  });
-  return movies.map(toMovie);
+export async function listMovies(options?: { page?: number; pageSize?: number }) {
+  const pageSize = Math.min(Math.max(options?.pageSize ?? 20, 1), 100)
+  const page = Math.max(options?.page ?? 1, 1)
+  const skip = (page - 1) * pageSize
+
+  const [total, movies] = await Promise.all([
+    prisma.movie.count(),
+    prisma.movie.findMany({
+      include: movieInclude,
+      orderBy: { title: "asc" },
+      skip,
+      take: pageSize,
+    }),
+  ])
+
+  return {
+    movies: movies.map(toMovie),
+    total,
+    page,
+    pageSize,
+    pageCount: Math.max(1, Math.ceil(total / pageSize)),
+  }
 }
 
 type MovieInput = {
