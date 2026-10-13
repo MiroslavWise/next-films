@@ -5,6 +5,7 @@ import { useEffect, useState } from "react"
 
 import { copy } from "@/lib/constants"
 import { ApiRequestError, api } from "@/lib/api-client"
+import { useBackNavigation } from "@/lib/telegram/use-back-navigation"
 import { useTelegram } from "@/lib/telegram/use-telegram"
 
 const links = [
@@ -16,8 +17,9 @@ const links = [
 ]
 
 export default function AdminPage() {
-  const { ready } = useTelegram()
+  const { ready, isTelegram } = useTelegram()
   const [state, setState] = useState<"loading" | "ok" | "denied" | "telegram">("loading")
+  useBackNavigation("/")
 
   useEffect(() => {
     if (!ready) return
@@ -39,6 +41,11 @@ export default function AdminPage() {
 
   return (
     <main className="mx-auto flex w-full max-w-lg flex-col gap-4 px-4 py-5">
+      {!isTelegram ? (
+        <Link href="/" className="text-sm text-[var(--tg-theme-hint-color)]">
+          ← {copy.backHome}
+        </Link>
+      ) : null}
       <h1 className="text-2xl font-semibold tracking-tight">{copy.admin.title}</h1>
       {state === "loading" ? <p className="text-sm text-(--tg-theme-hint-color)">{copy.loading}</p> : null}
       {state === "denied" ? <p>{copy.admin.noAccess}</p> : null}

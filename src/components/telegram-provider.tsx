@@ -1,6 +1,17 @@
 "use client"
 
-import { backButton, hapticFeedback, init, initData, mainButton, miniApp, retrieveRawInitData, themeParams, viewport } from "@tma.js/sdk"
+import {
+  backButton,
+  hapticFeedback,
+  init,
+  initData,
+  mainButton,
+  miniApp,
+  retrieveRawInitData,
+  swipeBehavior,
+  themeParams,
+  viewport,
+} from "@tma.js/sdk"
 import { type ReactNode, useEffect } from "react"
 import { ensureSession } from "@/lib/api-client"
 import { useSessionStore } from "@/lib/store/session"
@@ -59,9 +70,20 @@ export function TelegramProvider({ children }: { children: ReactNode }) {
         if (available(viewport.mount)) {
           await viewport.mount()
           if (available(viewport.expand)) viewport.expand()
+          if (available(viewport.requestFullscreen)) {
+            try {
+              await viewport.requestFullscreen()
+            } catch {
+              // Fullscreen может быть недоступен на части клиентов.
+            }
+          }
         }
         if (available(mainButton.mount)) mainButton.mount()
         if (available(backButton.mount)) backButton.mount()
+        if (available(swipeBehavior.mount)) {
+          swipeBehavior.mount()
+          if (available(swipeBehavior.disableVertical)) swipeBehavior.disableVertical()
+        }
         if (available(miniApp.ready)) miniApp.ready()
         applyThemeFromSdk()
         rawInitData = retrieveRawInitData() ?? initData.raw() ?? ""
