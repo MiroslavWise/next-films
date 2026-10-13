@@ -22,7 +22,7 @@ export function MovieCard({
 
   return (
     <article
-      className="flex min-w-0 flex-col overflow-hidden rounded-[var(--radius-md)] border border-(--surface-border) bg-(--tg-theme-secondary-bg-color)"
+      className="flex min-w-0 flex-col overflow-hidden rounded-md border border-(--surface-border) bg-(--tg-theme-secondary-bg-color)"
       aria-label={movie.title}
     >
       <div className="relative aspect-9/16">

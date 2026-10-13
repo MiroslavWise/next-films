@@ -67,7 +67,7 @@ export function MovieList() {
             ) : null}
             {moviesPage.movies.map((movie) => (
               <li key={movie.id} className={`${panelClass} flex gap-3 p-3`}>
-                <div className="relative h-24 w-16 shrink-0 overflow-hidden rounded-[var(--radius-sm)]">
+                <div className="relative h-24 w-16 shrink-0 overflow-hidden rounded-sm">
                   <BlurImage src={movie.posterUrl} alt={movie.title} blurhash={movie.posterBlurhash} sizes="64px" />
                 </div>
                 <div className="min-w-0 flex-1">
