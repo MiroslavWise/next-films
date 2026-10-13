@@ -1,3 +1,3 @@
-"use client";
+"use client"
 
-export { useTelegramUi as useTelegram } from "@/components/telegram-provider";
+export { useTelegramUi as useTelegram } from "@/components/telegram-provider"
