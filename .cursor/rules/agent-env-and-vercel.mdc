@@ -1,0 +1,14 @@
+---
+description: Агенты читают локальные env и могут мигрировать базу, Blob и вызывать Vercel CLI без вывода секретов
+alwaysApply: true
+---
+
+# Доступ к окружению, базе и Vercel
+
+- Читай `.env.local` и `.env` для локальных команд. Значения секретов не выводи в чат, коммиты, README и логи.
+- Файлы `.env*` не коммитить и не перезаписывать секреты.
+- Миграции Prisma (`prisma migrate`, `prisma db seed`) разрешены в уже подключённую Postgres через `POSTGRES_URL`.
+- Операции Vercel Blob (`put`, `del`, `list`) разрешены через `BLOB_READ_WRITE_TOKEN`.
+- Команды Vercel CLI выполняй с `VERCEL_TOKEN`, `VERCEL_ORG_ID` и `VERCEL_PROJECT_ID` из `.env.local`.
+- Не создавай новые Blob store, базы и Redis, если текущие переменные уже работают.
+- Rate limit ходит в уже подключённый Upstash через `KV_REST_API_URL` и `KV_REST_API_TOKEN`. Пакет `@vercel/kv` не использовать.

@@ -1,0 +1,140 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("POSTGRES_URL")
+}
+
+enum VoteChoice {
+  WATCH_MANY
+  WATCH_ONCE
+  REMOVE
+}
+
+model Movie {
+  id                      String   @id @default(uuid(7)) @db.Uuid
+  title                   String   @unique
+  posterUrl               String
+  posterBlurhash          String
+  watchManyCount          Int      @default(0)
+  onceEnoughCount         Int      @default(0)
+  removeFromIndustryCount Int      @default(0)
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  genres    MovieGenre[]
+  actors    MovieActor[]
+  directors MovieDirector[]
+  producers MovieProducer[]
+  votes     Vote[]
+}
+
+model Genre {
+  id        String       @id @default(uuid(7)) @db.Uuid
+  name      String
+  nameKey   String       @unique
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  movies    MovieGenre[]
+}
+
+model Actor {
+  id           String       @id @default(uuid(7)) @db.Uuid
+  name         String
+  nameKey      String       @unique
+  photoUrl     String?
+  photoBlurhash String?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  movies       MovieActor[]
+}
+
+model Director {
+  id            String          @id @default(uuid(7)) @db.Uuid
+  name          String
+  nameKey       String          @unique
+  photoUrl      String?
+  photoBlurhash String?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  movies        MovieDirector[]
+}
+
+model Producer {
+  id            String          @id @default(uuid(7)) @db.Uuid
+  name          String
+  nameKey       String          @unique
+  photoUrl      String?
+  photoBlurhash String?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  movies        MovieProducer[]
+}
+
+model MovieGenre {
+  movieId String @db.Uuid
+  genreId String @db.Uuid
+  movie   Movie  @relation(fields: [movieId], references: [id], onDelete: Cascade)
+  genre   Genre  @relation(fields: [genreId], references: [id], onDelete: Restrict)
+
+  @@id([movieId, genreId])
+  @@index([genreId])
+}
+
+model MovieActor {
+  movieId String @db.Uuid
+  actorId String @db.Uuid
+  movie   Movie  @relation(fields: [movieId], references: [id], onDelete: Cascade)
+  actor   Actor  @relation(fields: [actorId], references: [id], onDelete: Restrict)
+
+  @@id([movieId, actorId])
+  @@index([actorId])
+}
+
+model MovieDirector {
+  movieId    String   @db.Uuid
+  directorId String   @db.Uuid
+  movie      Movie    @relation(fields: [movieId], references: [id], onDelete: Cascade)
+  director   Director @relation(fields: [directorId], references: [id], onDelete: Restrict)
+
+  @@id([movieId, directorId])
+  @@index([directorId])
+}
+
+model MovieProducer {
+  movieId    String   @db.Uuid
+  producerId String   @db.Uuid
+  movie      Movie    @relation(fields: [movieId], references: [id], onDelete: Cascade)
+  producer   Producer @relation(fields: [producerId], references: [id], onDelete: Restrict)
+
+  @@id([movieId, producerId])
+  @@index([producerId])
+}
+
+model TelegramUser {
+  id           String   @id
+  username     String?
+  firstName    String?
+  lastName     String?
+  languageCode String?
+  createdAt    DateTime @default(now())
+  lastSeenAt   DateTime @updatedAt
+  votes        Vote[]
+}
+
+model Vote {
+  id        String     @id @default(uuid(7)) @db.Uuid
+  userId    String
+  movieId   String     @db.Uuid
+  choice    VoteChoice
+  createdAt DateTime   @default(now())
+
+  user  TelegramUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  movie Movie        @relation(fields: [movieId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, movieId])
+  @@index([userId])
+  @@index([movieId])
+}

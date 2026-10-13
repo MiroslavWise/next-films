@@ -1,0 +1,18 @@
+---
+description: Форматирование TS/TSX/JS по .prettierrc проекта
+globs: "**/*.{ts,tsx,js,jsx,mjs,cjs,json}"
+alwaysApply: true
+---
+
+# Prettier
+
+Ориентируйся на [.prettierrc](.prettierrc). При правках кода соблюдай эти настройки (не «дефолтный» Prettier и не стиль с точками с запятой по умолчанию):
+
+- `tabWidth`: 2, пробелы (`useTabs: false`)
+- `semi`: **false** — без точек с запятой
+- `printWidth`: 140
+- `trailingComma`: `"all"`
+- `bracketSpacing`: true
+- JSX: закрывающий `>` тега на новой строке (`jsxBracketSameLine: false` / аналог `bracketSameLine: false`)
+
+Не добавляй `;` в конце statements в TS/TSX. Не переноси строки агрессивнее, чем 140 символов, без необходимости.

@@ -1,26 +1,52 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --tg-theme-bg-color: #f4efe8;
+  --tg-theme-text-color: #1c1917;
+  --tg-theme-hint-color: #78716c;
+  --tg-theme-link-color: #9a3412;
+  --tg-theme-button-color: #9a3412;
+  --tg-theme-button-text-color: #fffaf5;
+  --tg-theme-secondary-bg-color: #fffdf9;
+  --font-sans: var(--font-manrope), "Segoe UI", sans-serif;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --tg-theme-bg-color: #141210;
+    --tg-theme-text-color: #f6f1ea;
+    --tg-theme-hint-color: #a8a29e;
+    --tg-theme-link-color: #fdba74;
+    --tg-theme-button-color: #ea580c;
+    --tg-theme-button-text-color: #1c1917;
+    --tg-theme-secondary-bg-color: #241f1b;
   }
 }
 
+html[data-theme="light"] {
+  --tg-theme-bg-color: #f4efe8;
+  --tg-theme-text-color: #1c1917;
+  --tg-theme-hint-color: #78716c;
+  --tg-theme-button-color: #9a3412;
+  --tg-theme-button-text-color: #fffaf5;
+  --tg-theme-secondary-bg-color: #fffdf9;
+}
+
+html[data-theme="dark"] {
+  --tg-theme-bg-color: #141210;
+  --tg-theme-text-color: #f6f1ea;
+  --tg-theme-hint-color: #a8a29e;
+  --tg-theme-button-color: #ea580c;
+  --tg-theme-button-text-color: #1c1917;
+  --tg-theme-secondary-bg-color: #241f1b;
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  font-family: var(--font-sans);
+}
+
+@theme inline {
+  --font-sans: var(--font-manrope), "Segoe UI", sans-serif;
 }
