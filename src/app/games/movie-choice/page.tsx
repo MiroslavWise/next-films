@@ -171,8 +171,10 @@ export default function MovieChoicePage() {
   }, [sending, saved])
 
   return (
-    <main className="mx-auto flex w-full max-w-lg flex-col gap-3 px-3 py-4">
-      <h1 className="text-xl font-semibold tracking-tight">{copy.appTitle}</h1>
+    <main className="mx-auto flex w-full max-w-lg flex-col gap-4 px-3 py-4">
+      <header className="border-b border-(--surface-border) pb-3">
+        <h1 className="text-xl font-semibold tracking-tight">{copy.appTitle}</h1>
+      </header>
       {status === "loading" ? <LoadingSkeleton /> : null}
       {status === "error" ? (
         <ErrorState message={error || copy.internal} onRetry={() => void load(new AbortController().signal)} />
@@ -191,14 +193,14 @@ export default function MovieChoicePage() {
               />
             ))}
           </div>
-          {statusText ? <p className="text-center text-sm text-[var(--tg-theme-hint-color)]">{statusText}</p> : null}
-          {error ? <p className="text-center text-sm">{error}</p> : null}
+          {statusText ? <p className="text-center text-sm text-(--tg-theme-hint-color)">{statusText}</p> : null}
+          {error ? <p className="text-center text-sm text-(--danger)">{error}</p> : null}
           {!isTelegram ? (
             <button
               type="button"
               disabled={!canSubmit || sending}
               onClick={() => void submit()}
-              className="h-12 rounded-full bg-[var(--tg-theme-button-color)] text-sm font-semibold text-[var(--tg-theme-button-text-color)] disabled:opacity-40"
+              className="h-12 rounded-[var(--radius-sm)] bg-(--tg-theme-button-color) text-sm font-semibold text-(--tg-theme-button-text-color) transition-transform active:scale-[0.98] disabled:opacity-40"
             >
               {sending ? copy.sending : copy.confirm}
             </button>

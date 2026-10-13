@@ -1,8 +1,9 @@
-"use client";
+"use client"
 
-import Image from "next/image";
-import { useState } from "react";
-import { Blurhash } from "react-blurhash";
+import Image from "next/image"
+import { useState } from "react"
+import { Blurhash } from "react-blurhash"
+import { mediaSrc } from "@/lib/media"
 
 export function BlurImage({
   src,
@@ -11,13 +12,14 @@ export function BlurImage({
   sizes,
   className,
 }: {
-  src: string;
-  alt: string;
-  blurhash: string;
-  sizes: string;
-  className?: string;
+  src: string
+  alt: string
+  blurhash: string
+  sizes: string
+  className?: string
 }) {
-  const [loaded, setLoaded] = useState(false);
+  const [loaded, setLoaded] = useState(false)
+  const imageSrc = mediaSrc(src)
 
   return (
     <div className={`absolute inset-0 overflow-hidden ${className ?? ""}`}>
@@ -33,13 +35,14 @@ export function BlurImage({
         />
       ) : null}
       <Image
-        src={src}
+        src={imageSrc}
         alt={alt}
         fill
         sizes={sizes}
+        unoptimized={imageSrc.startsWith("/api/media/")}
         className={`object-cover transition-opacity duration-300 ${loaded ? "opacity-100" : "opacity-0"}`}
         onLoad={() => setLoaded(true)}
       />
     </div>
-  );
+  )
 }

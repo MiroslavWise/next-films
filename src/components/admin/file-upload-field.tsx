@@ -18,15 +18,17 @@ export function FileUploadField({
   onChange,
 }: Props) {
   return (
-    <label className="grid gap-1.5 text-sm">
+    <label className="grid gap-2 text-sm">
       <span className="font-medium">{label}</span>
-      {hint ? <span className="text-xs text-[var(--tg-theme-hint-color)]">{hint}</span> : null}
-      <span className="flex min-h-14 cursor-pointer items-center justify-center rounded-2xl border border-dashed border-[color-mix(in_srgb,var(--tg-theme-hint-color)_55%,transparent)] bg-[var(--tg-theme-bg-color)] px-3 py-3 text-center text-sm text-[var(--tg-theme-hint-color)]">
-        {fileName ? (
-          <span className="truncate text-[var(--tg-theme-text-color)]">{fileName}</span>
-        ) : (
-          <span>{copy.admin.chooseFile}</span>
-        )}
+      {hint ? <span className="text-xs text-(--tg-theme-hint-color)">{hint}</span> : null}
+      <span
+        className={`flex min-h-16 cursor-pointer items-center justify-center rounded-[var(--radius-sm)] border border-dashed px-3 py-3 text-center text-sm transition-colors ${
+          fileName
+            ? "border-(--tg-theme-button-color) bg-[color-mix(in_srgb,var(--tg-theme-button-color)_8%,transparent)] text-(--tg-theme-text-color)"
+            : "border-(--surface-border-strong) bg-(--tg-theme-bg-color) text-(--tg-theme-hint-color) hover:border-(--tg-theme-button-color)"
+        }`}
+      >
+        {fileName ? <span className="truncate font-medium">{fileName}</span> : <span>{copy.admin.chooseFile}</span>}
         <input
           className="sr-only"
           type="file"

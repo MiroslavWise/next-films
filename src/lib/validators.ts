@@ -21,6 +21,7 @@ export const voteBodySchema = z
 const idList = z.array(uuid).default([]);
 
 export const movieBodySchema = z.object({
+  id: uuid.optional(),
   title: z.string().trim().min(1).max(200),
   posterUrl: z.url(),
   posterBlurhash: z.string().min(6).max(200),
@@ -28,13 +29,14 @@ export const movieBodySchema = z.object({
   actorIds: idList,
   directorIds: idList,
   producerIds: idList,
-});
+})
 
 export const personBodySchema = z.object({
+  id: uuid.optional(),
   name: z.string().trim().min(1).max(200),
   photoUrl: z.url().nullable().optional(),
   photoBlurhash: z.string().min(6).max(200).nullable().optional(),
-});
+})
 
 export const genreBodySchema = z.object({
   name: z.string().trim().min(1).max(80),

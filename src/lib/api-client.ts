@@ -51,9 +51,10 @@ export async function api<T>(path: string, init?: RequestInit, retry = true): Pr
   return data as T
 }
 
-export async function uploadPhoto(file: File, kind: "poster" | "portrait") {
+export async function uploadPhoto(file: File, kind: "poster" | "portrait", entityId?: string) {
   const body = new FormData()
   body.set("file", file)
   body.set("kind", kind)
-  return api<{ url: string; blurhash: string }>("/api/admin/photos", { method: "POST", body })
+  if (entityId) body.set("entityId", entityId)
+  return api<{ url: string; blurhash: string; entityId: string }>("/api/admin/photos", { method: "POST", body })
 }

@@ -62,25 +62,27 @@ export async function listMovies() {
 }
 
 type MovieInput = {
-  title: string;
-  posterUrl: string;
-  posterBlurhash: string;
-  genreIds: string[];
-  actorIds: string[];
-  directorIds: string[];
-  producerIds: string[];
-};
+  id?: string
+  title: string
+  posterUrl: string
+  posterBlurhash: string
+  genreIds: string[]
+  actorIds: string[]
+  directorIds: string[]
+  producerIds: string[]
+}
 
 export async function createMovie(input: MovieInput) {
   try {
     const movie = await prisma.$transaction(async (tx) => {
       const created = await tx.movie.create({
         data: {
+          ...(input.id ? { id: input.id } : {}),
           title: input.title,
           posterUrl: input.posterUrl,
           posterBlurhash: input.posterBlurhash,
         },
-      });
+      })
       if (input.genreIds.length > 0) {
         await tx.movieGenre.createMany({
           data: input.genreIds.map((genreId) => ({ movieId: created.id, genreId })),
@@ -244,13 +246,15 @@ export async function createPerson(
   name: string,
   photoUrl?: string | null,
   photoBlurhash?: string | null,
+  id?: string,
 ) {
   const data = {
+    ...(id ? { id } : {}),
     name,
     nameKey: nameKey(name),
     photoUrl: photoUrl ?? null,
     photoBlurhash: photoBlurhash ?? null,
-  };
+  }
   try {
     const person =
       kind === "actors"
@@ -266,11 +270,11 @@ export async function createPerson(
           : await prisma.producer.create({
               data,
               select: { id: true, name: true, photoUrl: true, photoBlurhash: true },
-            });
-    return { ok: true as const, person };
+            })
+    return { ok: true as const, person }
   } catch (error) {
-    if (isUniqueError(error)) return { ok: false as const, status: 409, error: copy.admin.duplicate };
-    throw error;
+    if (isUniqueError(error)) return { ok: false as const, status: 409, error: copy.admin.duplicate }
+    throw error
   }
 }
 

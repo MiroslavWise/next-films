@@ -17,7 +17,10 @@ export function MovieCard({
   onChoice: (choice: VoteChoiceName) => void
 }) {
   return (
-    <article className="flex min-w-0 flex-col overflow-hidden rounded-2xl bg-(--tg-theme-secondary-bg-color)" aria-label={movie.title}>
+    <article
+      className="flex min-w-0 flex-col overflow-hidden rounded-[var(--radius-md)] border border-(--surface-border) bg-(--tg-theme-secondary-bg-color)"
+      aria-label={movie.title}
+    >
       <div className="relative aspect-9/16">
         <BlurImage src={movie.posterUrl} alt={movie.title} blurhash={movie.posterBlurhash} sizes="33vw" />
       </div>

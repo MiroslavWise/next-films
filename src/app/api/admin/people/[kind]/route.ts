@@ -31,7 +31,8 @@ export async function POST(request: Request, context: Context) {
       parsed.data.name,
       parsed.data.photoUrl,
       parsed.data.photoBlurhash,
-    );
+      parsed.data.id,
+    )
     if (!result.ok) return jsonError(result.error, result.status);
     return Response.json({ person: result.person });
   } catch {
