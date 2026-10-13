@@ -1,8 +1,7 @@
-"use client";
+"use client"
 
-import { PersonManager } from "@/components/admin/person-manager";
-import { copy } from "@/lib/constants";
+import { ActorList } from "@/components/admin/actor-list"
 
 export default function ActorsPage() {
-  return <PersonManager kind="actors" title={copy.admin.actors} />;
+  return <ActorList />
 }

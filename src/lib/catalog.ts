@@ -195,7 +195,13 @@ export async function deleteMovie(id: string) {
 }
 
 export async function listGenres() {
-  return prisma.genre.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } });
+  return prisma.genre.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } })
+}
+
+export async function getGenre(id: string) {
+  const genre = await prisma.genre.findUnique({ where: { id }, select: { id: true, name: true } })
+  if (!genre) return { ok: false as const, status: 404, error: copy.notFound }
+  return { ok: true as const, genre }
 }
 
 export async function createGenre(name: string) {
@@ -242,26 +248,60 @@ export async function deleteGenre(id: string) {
   }
 }
 
+const personSelect = { id: true, name: true, photoUrl: true, photoBlurhash: true } as const
+
 async function listPeople(kind: PersonKind): Promise<PersonRecord[]> {
   if (kind === "actors") {
-    return prisma.actor.findMany({
-      orderBy: { name: "asc" },
-      select: { id: true, name: true, photoUrl: true, photoBlurhash: true },
-    });
+    return prisma.actor.findMany({ orderBy: { name: "asc" }, select: personSelect })
   }
   if (kind === "directors") {
-    return prisma.director.findMany({
-      orderBy: { name: "asc" },
-      select: { id: true, name: true, photoUrl: true, photoBlurhash: true },
-    });
+    return prisma.director.findMany({ orderBy: { name: "asc" }, select: personSelect })
   }
-  return prisma.producer.findMany({
-    orderBy: { name: "asc" },
-    select: { id: true, name: true, photoUrl: true, photoBlurhash: true },
-  });
+  return prisma.producer.findMany({ orderBy: { name: "asc" }, select: personSelect })
 }
 
-export { listPeople };
+export async function listPeoplePage(kind: PersonKind, options?: { page?: number; pageSize?: number }) {
+  const pageSize = Math.min(Math.max(options?.pageSize ?? 50, 1), 100)
+  const page = Math.max(options?.page ?? 1, 1)
+  const skip = (page - 1) * pageSize
+
+  const [total, people] =
+    kind === "actors"
+      ? await Promise.all([
+          prisma.actor.count(),
+          prisma.actor.findMany({ orderBy: { name: "asc" }, skip, take: pageSize, select: personSelect }),
+        ])
+      : kind === "directors"
+        ? await Promise.all([
+            prisma.director.count(),
+            prisma.director.findMany({ orderBy: { name: "asc" }, skip, take: pageSize, select: personSelect }),
+          ])
+        : await Promise.all([
+            prisma.producer.count(),
+            prisma.producer.findMany({ orderBy: { name: "asc" }, skip, take: pageSize, select: personSelect }),
+          ])
+
+  return {
+    people,
+    total,
+    page,
+    pageSize,
+    pageCount: Math.max(1, Math.ceil(total / pageSize)),
+  }
+}
+
+export async function getPerson(kind: PersonKind, id: string) {
+  const person =
+    kind === "actors"
+      ? await prisma.actor.findUnique({ where: { id }, select: personSelect })
+      : kind === "directors"
+        ? await prisma.director.findUnique({ where: { id }, select: personSelect })
+        : await prisma.producer.findUnique({ where: { id }, select: personSelect })
+  if (!person) return { ok: false as const, status: 404, error: copy.notFound }
+  return { ok: true as const, person }
+}
+
+export { listPeople }
 
 export async function createPerson(
   kind: PersonKind,

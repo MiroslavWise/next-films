@@ -1,13 +1,27 @@
-import { copy } from "@/lib/constants";
-import { deletePerson, updatePerson } from "@/lib/catalog";
-import { authenticateAdmin } from "@/lib/auth";
-import { jsonError } from "@/lib/http";
-import { personBodySchema, personKindSchema } from "@/lib/validators";
+import { copy } from "@/lib/constants"
+import { deletePerson, getPerson, updatePerson } from "@/lib/catalog"
+import { authenticateAdmin } from "@/lib/auth"
+import { jsonError } from "@/lib/http"
+import { personBodySchema, personKindSchema } from "@/lib/validators"
 
-type Context = { params: Promise<{ kind: string; id: string }> };
+type Context = { params: Promise<{ kind: string; id: string }> }
 
-const uuidRe =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+export async function GET(request: Request, context: Context) {
+  try {
+    const auth = await authenticateAdmin(request)
+    if (!auth.ok) return auth.response
+    const params = await context.params
+    const kind = personKindSchema.safeParse(params.kind)
+    if (!kind.success || !uuidRe.test(params.id)) return jsonError(copy.validation, 400)
+    const result = await getPerson(kind.data, params.id)
+    if (!result.ok) return jsonError(result.error, result.status)
+    return Response.json({ person: result.person })
+  } catch {
+    return jsonError(copy.internal, 500)
+  }
+}
 
 export async function PATCH(request: Request, context: Context) {
   try {

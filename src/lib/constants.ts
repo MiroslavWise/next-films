@@ -39,9 +39,13 @@ export const copy = {
     movieAdd: "Добавить фильм",
     movieEdit: "Изменить фильм",
     actors: "Актёры",
+    actorAdd: "Добавить актёра",
+    actorEdit: "Изменить актёра",
     directors: "Режиссёры",
     producers: "Продюсеры",
     genres: "Жанры",
+    genreAdd: "Добавить жанр",
+    genreEdit: "Изменить жанр",
     add: "Добавить",
     save: "Сохранить",
     delete: "Удалить",
@@ -72,6 +76,7 @@ export const copy = {
 
 export const ROUND_SIZE = 3
 export const ADMIN_MOVIES_PAGE_SIZE = 20
+export const ADMIN_ACTORS_PAGE_SIZE = 50
 export const MAX_UPLOAD_BYTES = 4 * 1024 * 1024
 /** Для мини-приложения хватает ~800px по ширине; сильнее режет вес. */
 export const POSTER_MAX_WIDTH = 800

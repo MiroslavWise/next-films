@@ -1,7 +1,7 @@
-"use client";
+"use client"
 
-import { GenreManager } from "@/components/admin/genre-manager";
+import { GenreList } from "@/components/admin/genre-list"
 
 export default function GenresPage() {
-  return <GenreManager />;
+  return <GenreList />
 }

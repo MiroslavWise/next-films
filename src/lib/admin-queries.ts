@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { api, uploadPhoto } from "@/lib/api-client"
-import { ADMIN_MOVIES_PAGE_SIZE } from "@/lib/constants"
+import { ADMIN_ACTORS_PAGE_SIZE, ADMIN_MOVIES_PAGE_SIZE } from "@/lib/constants"
 import { useTelegram } from "@/lib/telegram/use-telegram"
 import type { PersonKind } from "@/lib/validators"
 import type { MovieRecord, NamedRef, PersonRecord } from "@/types/api"
@@ -15,10 +15,21 @@ export type MoviesPage = {
   pageCount: number
 }
 
+export type PeoplePage = {
+  people: PersonRecord[]
+  total: number
+  page: number
+  pageSize: number
+  pageCount: number
+}
+
 export const adminKeys = {
   all: ["admin"] as const,
   genres: () => [...adminKeys.all, "genres"] as const,
+  genre: (id: string) => [...adminKeys.all, "genre", id] as const,
   people: (kind: PersonKind) => [...adminKeys.all, "people", kind] as const,
+  peoplePage: (kind: PersonKind, page: number) => [...adminKeys.people(kind), "page", page] as const,
+  person: (kind: PersonKind, id: string) => [...adminKeys.all, "person", kind, id] as const,
   movies: () => [...adminKeys.all, "movies"] as const,
   moviesPage: (page: number) => [...adminKeys.movies(), "page", page] as const,
   movie: (id: string) => [...adminKeys.all, "movie", id] as const,
@@ -58,6 +69,47 @@ export function usePeopleQuery(kind: PersonKind) {
     queryKey: adminKeys.people(kind),
     queryFn: () => fetchPeople(kind),
     enabled: ready,
+  })
+}
+
+async function fetchPeoplePage(kind: PersonKind, page: number, pageSize: number) {
+  return api<PeoplePage>(`/api/admin/people/${kind}?page=${page}&pageSize=${pageSize}`)
+}
+
+async function fetchPerson(kind: PersonKind, id: string) {
+  const data = await api<{ person: PersonRecord }>(`/api/admin/people/${kind}/${id}`)
+  return data.person
+}
+
+async function fetchGenre(id: string) {
+  const data = await api<{ genre: NamedRef }>(`/api/admin/genres/${id}`)
+  return data.genre
+}
+
+export function usePeoplePageQuery(kind: PersonKind, page: number, pageSize = ADMIN_ACTORS_PAGE_SIZE) {
+  const { ready } = useTelegram()
+  return useQuery({
+    queryKey: adminKeys.peoplePage(kind, page),
+    queryFn: () => fetchPeoplePage(kind, page, pageSize),
+    enabled: ready && page >= 1,
+  })
+}
+
+export function usePersonQuery(kind: PersonKind, id: string | undefined, enabled = true) {
+  const { ready } = useTelegram()
+  return useQuery({
+    queryKey: adminKeys.person(kind, id ?? ""),
+    queryFn: () => fetchPerson(kind, id!),
+    enabled: ready && enabled && Boolean(id),
+  })
+}
+
+export function useGenreQuery(id: string | undefined, enabled = true) {
+  const { ready } = useTelegram()
+  return useQuery({
+    queryKey: adminKeys.genre(id ?? ""),
+    queryFn: () => fetchGenre(id!),
+    enabled: ready && enabled && Boolean(id),
   })
 }
 

@@ -15,7 +15,7 @@ export function FileUploadField({
   label,
   hint,
   fileName,
-  accept = "image/jpeg,image/png,image/webp,image/avif,image/gif",
+  accept = "image/jpeg,image/jpg,image/png,image/x-png,image/webp,image/avif,image/gif,.jpg,.jpeg,.png,.webp,.avif,.gif",
   resetKey = 0,
   onChange,
 }: Props) {
