@@ -1,16 +1,29 @@
-import { copy } from "@/lib/constants";
-import { deleteMovie, updateMovie } from "@/lib/catalog";
-import { authenticateAdmin } from "@/lib/auth";
-import { jsonError } from "@/lib/http";
-import { movieBodySchema } from "@/lib/validators";
+import { copy } from "@/lib/constants"
+import { deleteMovie, getMovie, updateMovie } from "@/lib/catalog"
+import { authenticateAdmin } from "@/lib/auth"
+import { jsonError } from "@/lib/http"
+import { movieBodySchema } from "@/lib/validators"
 
-type Context = { params: Promise<{ id: string }> };
+type Context = { params: Promise<{ id: string }> }
 
-const uuidRe =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 function movieId(raw: string) {
-  return uuidRe.test(raw) ? raw : null;
+  return uuidRe.test(raw) ? raw : null
+}
+
+export async function GET(request: Request, context: Context) {
+  try {
+    const auth = await authenticateAdmin(request)
+    if (!auth.ok) return auth.response
+    const id = movieId((await context.params).id)
+    if (!id) return jsonError(copy.validation, 400)
+    const result = await getMovie(id)
+    if (!result.ok) return jsonError(result.error, result.status)
+    return Response.json({ movie: result.movie })
+  } catch {
+    return jsonError(copy.internal, 500)
+  }
 }
 
 export async function PATCH(request: Request, context: Context) {

@@ -77,6 +77,12 @@ export async function listMovies(options?: { page?: number; pageSize?: number })
   }
 }
 
+export async function getMovie(id: string) {
+  const movie = await prisma.movie.findUnique({ where: { id }, include: movieInclude })
+  if (!movie) return { ok: false as const, status: 404, error: copy.notFound }
+  return { ok: true as const, movie: toMovie(movie) }
+}
+
 type MovieInput = {
   id?: string
   title: string

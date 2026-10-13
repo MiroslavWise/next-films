@@ -2,19 +2,11 @@
 
 import { useCallback, useEffect, useState, type FormEvent } from "react"
 import { AdminFrame, FormMessage } from "@/components/admin/admin-frame"
-import {
-  buttonClass,
-  dangerActionClass,
-  fieldClass,
-  ghostButtonClass,
-  linkActionClass,
-  panelClass,
-} from "@/lib/ui"
 import { FileUploadField } from "@/components/admin/file-upload-field"
-import { BlurImage } from "@/components/blur-image"
 import { ApiRequestError, api, uploadPhoto } from "@/lib/api-client"
-import { ADMIN_MOVIES_PAGE_SIZE, copy } from "@/lib/constants"
+import { copy } from "@/lib/constants"
 import { useTelegram } from "@/lib/telegram/use-telegram"
+import { buttonClass, fieldClass, panelClass } from "@/lib/ui"
 import { uuidv7 } from "@/lib/uuid"
 import type { MovieRecord, NamedRef, PersonRecord } from "@/types/api"
 
@@ -25,32 +17,16 @@ type Refs = {
   producers: PersonRecord[]
 }
 
-type MoviesPage = {
-  movies: MovieRecord[]
-  total: number
-  page: number
-  pageSize: number
-  pageCount: number
-}
-
 const emptyRefs: Refs = { genres: [], actors: [], directors: [], producers: [] }
 
 function toggle(ids: string[], id: string) {
   return ids.includes(id) ? ids.filter((item) => item !== id) : [...ids, id]
 }
 
-export function MovieManager() {
+export function MovieForm({ mode, movieId }: { mode: "create" | "edit"; movieId?: string }) {
   const { ready } = useTelegram()
   const [refs, setRefs] = useState<Refs>(emptyRefs)
-  const [moviesPage, setMoviesPage] = useState<MoviesPage>({
-    movies: [],
-    total: 0,
-    page: 1,
-    pageSize: ADMIN_MOVIES_PAGE_SIZE,
-    pageCount: 1,
-  })
-  const [page, setPage] = useState(1)
-  const [formOpen, setFormOpen] = useState(false)
+  const [loaded, setLoaded] = useState(mode === "create")
   const [editing, setEditing] = useState<MovieRecord | null>(null)
   const [title, setTitle] = useState("")
   const [file, setFile] = useState<File | null>(null)
@@ -78,24 +54,35 @@ export function MovieManager() {
     })
   }, [])
 
-  const loadMovies = useCallback(async (nextPage: number) => {
-    const data = await api<MoviesPage>(`/api/admin/movies?page=${nextPage}&pageSize=${ADMIN_MOVIES_PAGE_SIZE}`)
-    setMoviesPage(data)
-    setPage(data.page)
+  const loadMovie = useCallback(async (id: string) => {
+    const data = await api<{ movie: MovieRecord }>(`/api/admin/movies/${id}`)
+    const movie = data.movie
+    setEditing(movie)
+    setTitle(movie.title)
+    setGenreIds(movie.genres.map((item) => item.id))
+    setActorIds(movie.actors.map((item) => item.id))
+    setDirectorIds(movie.directors.map((item) => item.id))
+    setProducerIds(movie.producers.map((item) => item.id))
+    setLoaded(true)
   }, [])
 
   useEffect(() => {
     if (!ready) return
     const timeout = window.setTimeout(() => {
-      void Promise.all([loadRefs(), loadMovies(1)]).catch((caught: unknown) => {
-        setError(caught instanceof ApiRequestError ? caught.message : copy.internal)
-      })
+      void (async () => {
+        try {
+          await loadRefs()
+          if (mode === "edit" && movieId) await loadMovie(movieId)
+        } catch (caught) {
+          setError(caught instanceof ApiRequestError ? caught.message : copy.internal)
+          setLoaded(true)
+        }
+      })()
     }, 0)
     return () => window.clearTimeout(timeout)
-  }, [ready, loadRefs, loadMovies])
+  }, [ready, mode, movieId, loadRefs, loadMovie])
 
-  function resetFormFields() {
-    setEditing(null)
+  function clearCreateFields() {
     setTitle("")
     setFile(null)
     setFileKey((value) => value + 1)
@@ -105,35 +92,9 @@ export function MovieManager() {
     setProducerIds([])
   }
 
-  function closeForm() {
-    resetFormFields()
-    setFormOpen(false)
-  }
-
-  function openCreate() {
-    resetFormFields()
-    setMessage("")
-    setError("")
-    setFormOpen(true)
-  }
-
-  function openEdit(movie: MovieRecord) {
-    setEditing(movie)
-    setTitle(movie.title)
-    setFile(null)
-    setFileKey((value) => value + 1)
-    setGenreIds(movie.genres.map((item) => item.id))
-    setActorIds(movie.actors.map((item) => item.id))
-    setDirectorIds(movie.directors.map((item) => item.id))
-    setProducerIds(movie.producers.map((item) => item.id))
-    setMessage("")
-    setError("")
-    setFormOpen(true)
-  }
-
   async function onSubmit(event: FormEvent) {
     event.preventDefault()
-    if (!editing && !file) {
+    if (mode === "create" && !file) {
       setError(copy.admin.posterRequired)
       setMessage("")
       return
@@ -142,16 +103,16 @@ export function MovieManager() {
     setError("")
     setMessage("")
     try {
-      const movieId = editing?.id ?? uuidv7()
+      const id = editing?.id ?? uuidv7()
       let posterUrl = editing?.posterUrl ?? ""
       let posterBlurhash = editing?.posterBlurhash ?? ""
       if (file) {
-        const uploaded = await uploadPhoto(file, "poster", movieId)
+        const uploaded = await uploadPhoto(file, "poster", id)
         posterUrl = uploaded.url
         posterBlurhash = uploaded.blurhash
       }
       const body = JSON.stringify({
-        id: movieId,
+        id,
         title,
         posterUrl,
         posterBlurhash,
@@ -160,15 +121,16 @@ export function MovieManager() {
         directorIds,
         producerIds,
       })
-      if (editing) {
-        await api(`/api/admin/movies/${editing.id}`, { method: "PATCH", body })
+      if (mode === "edit" && editing) {
+        const updated = await api<{ movie: MovieRecord }>(`/api/admin/movies/${editing.id}`, { method: "PATCH", body })
+        setEditing(updated.movie)
+        setFile(null)
+        setFileKey((value) => value + 1)
       } else {
         await api("/api/admin/movies", { method: "POST", body })
+        clearCreateFields()
       }
-      resetFormFields()
-      setFormOpen(false)
       setMessage(copy.admin.saved)
-      await loadMovies(editing ? page : 1)
     } catch (caught) {
       setMessage("")
       setError(caught instanceof ApiRequestError ? caught.message : copy.internal)
@@ -177,33 +139,18 @@ export function MovieManager() {
     }
   }
 
-  async function onDelete(movie: MovieRecord) {
-    if (!window.confirm(`${copy.admin.delete}: ${movie.title}?`)) return
-    setError("")
-    setMessage("")
-    try {
-      await api(`/api/admin/movies/${movie.id}`, { method: "DELETE" })
-      if (editing?.id === movie.id) closeForm()
-      setMessage(copy.admin.deleted)
-      const nextPage = moviesPage.movies.length <= 1 && page > 1 ? page - 1 : page
-      await loadMovies(nextPage)
-    } catch (caught) {
-      setError(caught instanceof ApiRequestError ? caught.message : copy.internal)
-    }
-  }
-
   return (
-    <AdminFrame title={copy.admin.movies}>
-      {!formOpen ? (
-        <button className={buttonClass} type="button" onClick={openCreate}>
-          {copy.admin.add}
-        </button>
-      ) : null}
-
+    <AdminFrame
+      title={mode === "create" ? copy.admin.movieAdd : copy.admin.movieEdit}
+      backHref="/admin/movies"
+      backLabel={copy.admin.movies}
+    >
       {message ? <FormMessage tone="ok">{message}</FormMessage> : null}
       {error ? <FormMessage tone="error">{error}</FormMessage> : null}
 
-      {formOpen ? (
+      {!loaded ? <p className="text-sm text-(--tg-theme-hint-color)">{copy.loading}</p> : null}
+
+      {loaded && (mode === "create" || editing) ? (
         <form onSubmit={onSubmit} className={`${panelClass} grid gap-4`}>
           <label className="grid gap-2 text-sm">
             <span className="font-medium">{copy.admin.titleField}</span>
@@ -211,7 +158,7 @@ export function MovieManager() {
           </label>
           <FileUploadField
             label={copy.admin.poster}
-            hint={editing ? copy.admin.optional : copy.admin.required}
+            hint={mode === "edit" ? copy.admin.optional : copy.admin.required}
             fileName={file?.name ?? null}
             resetKey={fileKey}
             onChange={setFile}
@@ -242,64 +189,10 @@ export function MovieManager() {
           />
           <div className="flex flex-wrap gap-2 pt-1">
             <button className={buttonClass} type="submit" disabled={pending}>
-              {editing ? copy.admin.save : copy.admin.add}
-            </button>
-            <button className={ghostButtonClass} type="button" onClick={closeForm}>
-              {editing ? copy.admin.cancel : copy.admin.closeForm}
+              {mode === "edit" ? copy.admin.save : copy.admin.add}
             </button>
           </div>
         </form>
-      ) : null}
-
-      <ul className="grid gap-3">
-        {moviesPage.movies.length === 0 ? (
-          <li className={`${panelClass} text-sm text-(--tg-theme-hint-color)`}>{copy.admin.emptyList}</li>
-        ) : null}
-        {moviesPage.movies.map((movie) => (
-          <li key={movie.id} className={`${panelClass} flex gap-3 p-3`}>
-            <div className="relative h-24 w-16 shrink-0 overflow-hidden rounded-[var(--radius-sm)]">
-              <BlurImage src={movie.posterUrl} alt={movie.title} blurhash={movie.posterBlurhash} sizes="64px" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="font-semibold tracking-tight">{movie.title}</p>
-              <p className="mt-1 text-xs text-(--tg-theme-hint-color)">
-                {movie.watchManyCount} / {movie.onceEnoughCount} / {movie.removeFromIndustryCount}
-              </p>
-              <div className="mt-3 flex gap-4">
-                <button type="button" className={linkActionClass} onClick={() => openEdit(movie)}>
-                  {copy.admin.edit}
-                </button>
-                <button type="button" className={dangerActionClass} onClick={() => void onDelete(movie)}>
-                  {copy.admin.delete}
-                </button>
-              </div>
-            </div>
-          </li>
-        ))}
-      </ul>
-
-      {moviesPage.pageCount > 1 ? (
-        <div className="flex items-center justify-between gap-3">
-          <button
-            type="button"
-            className={ghostButtonClass}
-            disabled={page <= 1 || pending}
-            onClick={() => void loadMovies(page - 1)}
-          >
-            {copy.admin.prevPage}
-          </button>
-          <p className="text-sm text-(--tg-theme-hint-color)">
-            {copy.admin.pageOf} {moviesPage.page} / {moviesPage.pageCount}
-          </p>
-          <button
-            type="button"
-            className={ghostButtonClass}
-            disabled={page >= moviesPage.pageCount || pending}
-            onClick={() => void loadMovies(page + 1)}
-          >
-            {copy.admin.nextPage}
-          </button>
-        </div>
       ) : null}
     </AdminFrame>
   )

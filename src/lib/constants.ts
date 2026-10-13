@@ -36,6 +36,8 @@ export const copy = {
     title: "Админка",
     open: "Админка",
     movies: "Фильмы",
+    movieAdd: "Добавить фильм",
+    movieEdit: "Изменить фильм",
     actors: "Актёры",
     directors: "Режиссёры",
     producers: "Продюсеры",
@@ -65,7 +67,6 @@ export const copy = {
     prevPage: "Назад",
     nextPage: "Далее",
     pageOf: "Стр.",
-    closeForm: "Закрыть",
   },
 } as const
 

@@ -1,7 +1,7 @@
-"use client";
+"use client"
 
-import { MovieManager } from "@/components/admin/movie-manager";
+import { MovieList } from "@/components/admin/movie-list"
 
 export default function MoviesAdminPage() {
-  return <MovieManager />;
+  return <MovieList />
 }
