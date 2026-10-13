@@ -1,7 +1,11 @@
 "use client"
 
-import { useCallback, useEffect, useState, type FormEvent } from "react"
+import { useState, type FormEvent } from "react"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { AdminFrame, FormMessage } from "@/components/admin/admin-frame"
+import { adminKeys, useGenresQuery } from "@/lib/admin-queries"
+import { ApiRequestError, api } from "@/lib/api-client"
+import { copy } from "@/lib/constants"
 import {
   buttonClass,
   dangerActionClass,
@@ -10,69 +14,72 @@ import {
   linkActionClass,
   panelClass,
 } from "@/lib/ui"
-import { ApiRequestError, api } from "@/lib/api-client"
-import { copy } from "@/lib/constants"
-import { useTelegram } from "@/lib/telegram/use-telegram"
 import type { NamedRef } from "@/types/api"
 
 export function GenreManager() {
-  const { ready } = useTelegram()
-  const [genres, setGenres] = useState<NamedRef[]>([])
+  const queryClient = useQueryClient()
+  const genresQuery = useGenresQuery()
   const [name, setName] = useState("")
   const [editing, setEditing] = useState<NamedRef | null>(null)
   const [message, setMessage] = useState("")
   const [error, setError] = useState("")
-  const [pending, setPending] = useState(false)
 
-  const load = useCallback(async () => {
-    const data = await api<{ genres: NamedRef[] }>("/api/admin/genres")
-    setGenres(data.genres)
-  }, [])
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      const body = JSON.stringify({ name })
+      if (editing) {
+        return api(`/api/admin/genres/${editing.id}`, { method: "PATCH", body })
+      }
+      return api("/api/admin/genres", { method: "POST", body })
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: adminKeys.genres() })
+    },
+  })
 
-  useEffect(() => {
-    if (!ready) return
-    const timeout = window.setTimeout(() => {
-      void load().catch((caught: unknown) => {
-        setError(caught instanceof ApiRequestError ? caught.message : copy.internal)
-      })
-    }, 0)
-    return () => window.clearTimeout(timeout)
-  }, [ready, load])
+  const deleteMutation = useMutation({
+    mutationFn: (genre: NamedRef) => api(`/api/admin/genres/${genre.id}`, { method: "DELETE" }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: adminKeys.genres() })
+    },
+  })
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault()
-    setPending(true)
     setError("")
     setMessage("")
     try {
-      const body = JSON.stringify({ name })
-      if (editing) {
-        await api(`/api/admin/genres/${editing.id}`, { method: "PATCH", body })
-      } else {
-        await api("/api/admin/genres", { method: "POST", body })
-      }
+      await saveMutation.mutateAsync()
       setName("")
       setEditing(null)
       setMessage(copy.admin.saved)
-      await load()
     } catch (caught) {
       setError(caught instanceof ApiRequestError ? caught.message : copy.internal)
-    } finally {
-      setPending(false)
     }
   }
 
   async function onDelete(genre: NamedRef) {
     if (!window.confirm(`${copy.admin.delete}: ${genre.name}?`)) return
     setError("")
+    setMessage("")
     try {
-      await api(`/api/admin/genres/${genre.id}`, { method: "DELETE" })
+      await deleteMutation.mutateAsync(genre)
+      if (editing?.id === genre.id) {
+        setEditing(null)
+        setName("")
+      }
       setMessage(copy.admin.deleted)
-      await load()
     } catch (caught) {
       setError(caught instanceof ApiRequestError ? caught.message : copy.internal)
     }
   }
+
+  const genres = genresQuery.data ?? []
+  const loadError = genresQuery.isError
+    ? genresQuery.error instanceof ApiRequestError
+      ? genresQuery.error.message
+      : copy.internal
+    : ""
 
   return (
     <AdminFrame title={copy.admin.genres}>
@@ -82,7 +89,7 @@ export function GenreManager() {
           <input className={fieldClass} value={name} onChange={(event) => setName(event.target.value)} required />
         </label>
         <div className="flex flex-wrap gap-2">
-          <button className={buttonClass} type="submit" disabled={pending}>
+          <button className={buttonClass} type="submit" disabled={saveMutation.isPending}>
             {editing ? copy.admin.save : copy.admin.add}
           </button>
           {editing ? (
@@ -100,9 +107,10 @@ export function GenreManager() {
         </div>
       </form>
       {message ? <FormMessage tone="ok">{message}</FormMessage> : null}
-      {error ? <FormMessage tone="error">{error}</FormMessage> : null}
+      {error || loadError ? <FormMessage tone="error">{error || loadError}</FormMessage> : null}
+      {genresQuery.isPending ? <p className="text-sm text-(--tg-theme-hint-color)">{copy.loading}</p> : null}
       <ul className={`${panelClass} divide-y divide-(--surface-border) p-0`}>
-        {genres.length === 0 ? (
+        {!genresQuery.isPending && genres.length === 0 ? (
           <li className="px-4 py-3 text-sm text-(--tg-theme-hint-color)">{copy.admin.emptyList}</li>
         ) : null}
         {genres.map((genre) => (
@@ -119,7 +127,12 @@ export function GenreManager() {
               >
                 {copy.admin.edit}
               </button>
-              <button type="button" className={dangerActionClass} onClick={() => void onDelete(genre)}>
+              <button
+                type="button"
+                className={dangerActionClass}
+                disabled={deleteMutation.isPending}
+                onClick={() => void onDelete(genre)}
+              >
                 {copy.admin.delete}
               </button>
             </span>

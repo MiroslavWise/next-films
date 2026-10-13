@@ -1,7 +1,13 @@
 "use client"
 
-import { useCallback, useEffect, useState, type FormEvent } from "react"
+import { useState, type FormEvent } from "react"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { AdminFrame, FormMessage } from "@/components/admin/admin-frame"
+import { FileUploadField } from "@/components/admin/file-upload-field"
+import { adminKeys, usePeopleQuery } from "@/lib/admin-queries"
+import { ApiRequestError, api, uploadPhoto } from "@/lib/api-client"
+import { copy } from "@/lib/constants"
+import { uuidv7 } from "@/lib/uuid"
 import {
   buttonClass,
   dangerActionClass,
@@ -10,45 +16,21 @@ import {
   linkActionClass,
   panelClass,
 } from "@/lib/ui"
-import { FileUploadField } from "@/components/admin/file-upload-field"
-import { ApiRequestError, api, uploadPhoto } from "@/lib/api-client"
-import { copy } from "@/lib/constants"
-import { useTelegram } from "@/lib/telegram/use-telegram"
-import { uuidv7 } from "@/lib/uuid"
 import type { PersonKind } from "@/lib/validators"
 import type { PersonRecord } from "@/types/api"
 
 export function PersonManager({ kind, title }: { kind: PersonKind; title: string }) {
-  const { ready } = useTelegram()
-  const [people, setPeople] = useState<PersonRecord[]>([])
+  const queryClient = useQueryClient()
+  const peopleQuery = usePeopleQuery(kind)
   const [name, setName] = useState("")
   const [file, setFile] = useState<File | null>(null)
+  const [fileKey, setFileKey] = useState(0)
   const [editing, setEditing] = useState<PersonRecord | null>(null)
   const [message, setMessage] = useState("")
   const [error, setError] = useState("")
-  const [pending, setPending] = useState(false)
 
-  const load = useCallback(async () => {
-    const data = await api<{ people: PersonRecord[] }>(`/api/admin/people/${kind}`)
-    setPeople(data.people)
-  }, [kind])
-
-  useEffect(() => {
-    if (!ready) return
-    const timeout = window.setTimeout(() => {
-      void load().catch((caught: unknown) => {
-        setError(caught instanceof ApiRequestError ? caught.message : copy.internal)
-      })
-    }, 0)
-    return () => window.clearTimeout(timeout)
-  }, [ready, load])
-
-  async function onSubmit(event: FormEvent) {
-    event.preventDefault()
-    setPending(true)
-    setError("")
-    setMessage("")
-    try {
+  const saveMutation = useMutation({
+    mutationFn: async () => {
       const personId = editing?.id ?? uuidv7()
       let photoUrl = editing?.photoUrl ?? null
       let photoBlurhash = editing?.photoBlurhash ?? null
@@ -59,33 +41,62 @@ export function PersonManager({ kind, title }: { kind: PersonKind; title: string
       }
       const body = JSON.stringify({ id: personId, name, photoUrl, photoBlurhash })
       if (editing) {
-        await api(`/api/admin/people/${kind}/${editing.id}`, { method: "PATCH", body })
-      } else {
-        await api(`/api/admin/people/${kind}`, { method: "POST", body })
+        return api(`/api/admin/people/${kind}/${editing.id}`, { method: "PATCH", body })
       }
+      return api(`/api/admin/people/${kind}`, { method: "POST", body })
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: adminKeys.people(kind) })
+    },
+  })
+
+  const deleteMutation = useMutation({
+    mutationFn: (person: PersonRecord) => api(`/api/admin/people/${kind}/${person.id}`, { method: "DELETE" }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: adminKeys.people(kind) })
+    },
+  })
+
+  async function onSubmit(event: FormEvent) {
+    event.preventDefault()
+    setError("")
+    setMessage("")
+    try {
+      await saveMutation.mutateAsync()
       setName("")
       setFile(null)
+      setFileKey((value) => value + 1)
       setEditing(null)
       setMessage(copy.admin.saved)
-      await load()
     } catch (caught) {
       setError(caught instanceof ApiRequestError ? caught.message : copy.internal)
-    } finally {
-      setPending(false)
     }
   }
 
   async function onDelete(person: PersonRecord) {
     if (!window.confirm(`${copy.admin.delete}: ${person.name}?`)) return
     setError("")
+    setMessage("")
     try {
-      await api(`/api/admin/people/${kind}/${person.id}`, { method: "DELETE" })
+      await deleteMutation.mutateAsync(person)
+      if (editing?.id === person.id) {
+        setEditing(null)
+        setName("")
+        setFile(null)
+        setFileKey((value) => value + 1)
+      }
       setMessage(copy.admin.deleted)
-      await load()
     } catch (caught) {
       setError(caught instanceof ApiRequestError ? caught.message : copy.internal)
     }
   }
+
+  const people = peopleQuery.data ?? []
+  const loadError = peopleQuery.isError
+    ? peopleQuery.error instanceof ApiRequestError
+      ? peopleQuery.error.message
+      : copy.internal
+    : ""
 
   return (
     <AdminFrame title={title}>
@@ -98,10 +109,11 @@ export function PersonManager({ kind, title }: { kind: PersonKind; title: string
           label={copy.admin.photo}
           hint={copy.admin.optional}
           fileName={file?.name ?? null}
+          resetKey={fileKey}
           onChange={setFile}
         />
         <div className="flex flex-wrap gap-2">
-          <button className={buttonClass} type="submit" disabled={pending}>
+          <button className={buttonClass} type="submit" disabled={saveMutation.isPending}>
             {editing ? copy.admin.save : copy.admin.add}
           </button>
           {editing ? (
@@ -112,6 +124,7 @@ export function PersonManager({ kind, title }: { kind: PersonKind; title: string
                 setEditing(null)
                 setName("")
                 setFile(null)
+                setFileKey((value) => value + 1)
               }}
             >
               {copy.admin.cancel}
@@ -120,9 +133,10 @@ export function PersonManager({ kind, title }: { kind: PersonKind; title: string
         </div>
       </form>
       {message ? <FormMessage tone="ok">{message}</FormMessage> : null}
-      {error ? <FormMessage tone="error">{error}</FormMessage> : null}
+      {error || loadError ? <FormMessage tone="error">{error || loadError}</FormMessage> : null}
+      {peopleQuery.isPending ? <p className="text-sm text-(--tg-theme-hint-color)">{copy.loading}</p> : null}
       <ul className={`${panelClass} divide-y divide-(--surface-border) p-0`}>
-        {people.length === 0 ? (
+        {!peopleQuery.isPending && people.length === 0 ? (
           <li className="px-4 py-3 text-sm text-(--tg-theme-hint-color)">{copy.admin.emptyList}</li>
         ) : null}
         {people.map((person) => (
@@ -136,11 +150,17 @@ export function PersonManager({ kind, title }: { kind: PersonKind; title: string
                   setEditing(person)
                   setName(person.name)
                   setFile(null)
+                  setFileKey((value) => value + 1)
                 }}
               >
                 {copy.admin.edit}
               </button>
-              <button type="button" className={dangerActionClass} onClick={() => void onDelete(person)}>
+              <button
+                type="button"
+                className={dangerActionClass}
+                disabled={deleteMutation.isPending}
+                onClick={() => void onDelete(person)}
+              >
                 {copy.admin.delete}
               </button>
             </span>

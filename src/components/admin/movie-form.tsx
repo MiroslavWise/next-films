@@ -1,33 +1,23 @@
 "use client"
 
-import { useCallback, useEffect, useState, type FormEvent } from "react"
+import { useEffect, useState, type FormEvent } from "react"
 import { AdminFrame, FormMessage } from "@/components/admin/admin-frame"
 import { FileUploadField } from "@/components/admin/file-upload-field"
-import { ApiRequestError, api, uploadPhoto } from "@/lib/api-client"
+import { useCatalogRefsQuery, useMovieQuery, useSaveMovieMutation } from "@/lib/admin-queries"
+import { ApiRequestError } from "@/lib/api-client"
 import { copy } from "@/lib/constants"
-import { useTelegram } from "@/lib/telegram/use-telegram"
 import { buttonClass, fieldClass, panelClass } from "@/lib/ui"
 import { uuidv7 } from "@/lib/uuid"
-import type { MovieRecord, NamedRef, PersonRecord } from "@/types/api"
-
-type Refs = {
-  genres: NamedRef[]
-  actors: PersonRecord[]
-  directors: PersonRecord[]
-  producers: PersonRecord[]
-}
-
-const emptyRefs: Refs = { genres: [], actors: [], directors: [], producers: [] }
 
 function toggle(ids: string[], id: string) {
   return ids.includes(id) ? ids.filter((item) => item !== id) : [...ids, id]
 }
 
 export function MovieForm({ mode, movieId }: { mode: "create" | "edit"; movieId?: string }) {
-  const { ready } = useTelegram()
-  const [refs, setRefs] = useState<Refs>(emptyRefs)
-  const [loaded, setLoaded] = useState(mode === "create")
-  const [editing, setEditing] = useState<MovieRecord | null>(null)
+  const refs = useCatalogRefsQuery()
+  const movieQuery = useMovieQuery(movieId, mode === "edit")
+  const saveMutation = useSaveMovieMutation()
+
   const [title, setTitle] = useState("")
   const [file, setFile] = useState<File | null>(null)
   const [fileKey, setFileKey] = useState(0)
@@ -37,50 +27,18 @@ export function MovieForm({ mode, movieId }: { mode: "create" | "edit"; movieId?
   const [producerIds, setProducerIds] = useState<string[]>([])
   const [message, setMessage] = useState("")
   const [error, setError] = useState("")
-  const [pending, setPending] = useState(false)
+  const [hydratedId, setHydratedId] = useState<string | null>(null)
 
-  const loadRefs = useCallback(async () => {
-    const [genres, actors, directors, producers] = await Promise.all([
-      api<{ genres: NamedRef[] }>("/api/admin/genres"),
-      api<{ people: PersonRecord[] }>("/api/admin/people/actors"),
-      api<{ people: PersonRecord[] }>("/api/admin/people/directors"),
-      api<{ people: PersonRecord[] }>("/api/admin/people/producers"),
-    ])
-    setRefs({
-      genres: genres.genres,
-      actors: actors.people,
-      directors: directors.people,
-      producers: producers.people,
-    })
-  }, [])
-
-  const loadMovie = useCallback(async (id: string) => {
-    const data = await api<{ movie: MovieRecord }>(`/api/admin/movies/${id}`)
-    const movie = data.movie
-    setEditing(movie)
+  useEffect(() => {
+    const movie = movieQuery.data
+    if (!movie || hydratedId === movie.id) return
     setTitle(movie.title)
     setGenreIds(movie.genres.map((item) => item.id))
     setActorIds(movie.actors.map((item) => item.id))
     setDirectorIds(movie.directors.map((item) => item.id))
     setProducerIds(movie.producers.map((item) => item.id))
-    setLoaded(true)
-  }, [])
-
-  useEffect(() => {
-    if (!ready) return
-    const timeout = window.setTimeout(() => {
-      void (async () => {
-        try {
-          await loadRefs()
-          if (mode === "edit" && movieId) await loadMovie(movieId)
-        } catch (caught) {
-          setError(caught instanceof ApiRequestError ? caught.message : copy.internal)
-          setLoaded(true)
-        }
-      })()
-    }, 0)
-    return () => window.clearTimeout(timeout)
-  }, [ready, mode, movieId, loadRefs, loadMovie])
+    setHydratedId(movie.id)
+  }, [movieQuery.data, hydratedId])
 
   function clearCreateFields() {
     setTitle("")
@@ -99,45 +57,41 @@ export function MovieForm({ mode, movieId }: { mode: "create" | "edit"; movieId?
       setMessage("")
       return
     }
-    setPending(true)
     setError("")
     setMessage("")
     try {
-      const id = editing?.id ?? uuidv7()
-      let posterUrl = editing?.posterUrl ?? ""
-      let posterBlurhash = editing?.posterBlurhash ?? ""
-      if (file) {
-        const uploaded = await uploadPhoto(file, "poster", id)
-        posterUrl = uploaded.url
-        posterBlurhash = uploaded.blurhash
-      }
-      const body = JSON.stringify({
-        id,
+      const nextId = movieQuery.data?.id ?? uuidv7()
+      await saveMutation.mutateAsync({
+        mode,
+        movieId: movieQuery.data?.id,
         title,
-        posterUrl,
-        posterBlurhash,
+        file,
+        existing: movieQuery.data,
         genreIds,
         actorIds,
         directorIds,
         producerIds,
+        nextId,
       })
-      if (mode === "edit" && editing) {
-        const updated = await api<{ movie: MovieRecord }>(`/api/admin/movies/${editing.id}`, { method: "PATCH", body })
-        setEditing(updated.movie)
+      if (mode === "create") clearCreateFields()
+      else {
         setFile(null)
         setFileKey((value) => value + 1)
-      } else {
-        await api("/api/admin/movies", { method: "POST", body })
-        clearCreateFields()
       }
       setMessage(copy.admin.saved)
     } catch (caught) {
       setMessage("")
       setError(caught instanceof ApiRequestError ? caught.message : copy.internal)
-    } finally {
-      setPending(false)
     }
   }
+
+  const loading = refs.isPending || (mode === "edit" && movieQuery.isPending)
+  const loadError =
+    refs.isError || movieQuery.isError
+      ? ((refs.error ?? movieQuery.error) instanceof ApiRequestError
+          ? (refs.error ?? movieQuery.error)!.message
+          : copy.internal)
+      : ""
 
   return (
     <AdminFrame
@@ -146,11 +100,11 @@ export function MovieForm({ mode, movieId }: { mode: "create" | "edit"; movieId?
       backLabel={copy.admin.movies}
     >
       {message ? <FormMessage tone="ok">{message}</FormMessage> : null}
-      {error ? <FormMessage tone="error">{error}</FormMessage> : null}
+      {error || loadError ? <FormMessage tone="error">{error || loadError}</FormMessage> : null}
 
-      {!loaded ? <p className="text-sm text-(--tg-theme-hint-color)">{copy.loading}</p> : null}
+      {loading ? <p className="text-sm text-(--tg-theme-hint-color)">{copy.loading}</p> : null}
 
-      {loaded && (mode === "create" || editing) ? (
+      {!loading && (mode === "create" || movieQuery.data) ? (
         <form onSubmit={onSubmit} className={`${panelClass} grid gap-4`}>
           <label className="grid gap-2 text-sm">
             <span className="font-medium">{copy.admin.titleField}</span>
@@ -188,7 +142,7 @@ export function MovieForm({ mode, movieId }: { mode: "create" | "edit"; movieId?
             onToggle={(id) => setProducerIds((current) => toggle(current, id))}
           />
           <div className="flex flex-wrap gap-2 pt-1">
-            <button className={buttonClass} type="submit" disabled={pending}>
+            <button className={buttonClass} type="submit" disabled={saveMutation.isPending}>
               {mode === "edit" ? copy.admin.save : copy.admin.add}
             </button>
           </div>
