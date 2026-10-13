@@ -1,71 +1,71 @@
-"use client";
+"use client"
 
-import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
-import { MovieCard } from "@/components/movie-card";
-import { EmptyState } from "@/components/empty-state";
-import { ErrorState } from "@/components/error-state";
-import { LoadingSkeleton } from "@/components/loading-skeleton";
+import { MovieCard } from "@/components/movie-card"
+import { EmptyState } from "@/components/empty-state"
+import { ErrorState } from "@/components/error-state"
+import { LoadingSkeleton } from "@/components/loading-skeleton"
 
-import { copy } from "@/lib/constants";
-import { ApiRequestError, api } from "@/lib/api-client";
-import { useTelegram } from "@/lib/telegram/use-telegram";
-import { useSessionStore } from "@/lib/store/session";
-import type { RoundMovie, RoundResponse, VoteChoiceName, VoteResponse } from "@/types/api";
+import { copy } from "@/lib/constants"
+import { ApiRequestError, api } from "@/lib/api-client"
+import { useTelegram } from "@/lib/telegram/use-telegram"
+import { useSessionStore } from "@/lib/store/session"
+import type { RoundMovie, RoundResponse, VoteChoiceName, VoteResponse } from "@/types/api"
 
 export default function MovieChoicePage() {
-  const router = useRouter();
-  const { ready, isTelegram, haptic, mainButton, backButton } = useTelegram();
-  const choices = useSessionStore((state) => state.choices);
-  const setChoice = useSessionStore((state) => state.setChoice);
-  const clearChoices = useSessionStore((state) => state.clearChoices);
-  const [movies, setMovies] = useState<RoundMovie[]>([]);
-  const [status, setStatus] = useState<"loading" | "ready" | "finished" | "error">("loading");
-  const [error, setError] = useState("");
-  const [sending, setSending] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const router = useRouter()
+  const { ready, isTelegram, haptic, mainButton, backButton } = useTelegram()
+  const choices = useSessionStore((state) => state.choices)
+  const setChoice = useSessionStore((state) => state.setChoice)
+  const clearChoices = useSessionStore((state) => state.clearChoices)
+  const [movies, setMovies] = useState<RoundMovie[]>([])
+  const [status, setStatus] = useState<"loading" | "ready" | "finished" | "error">("loading")
+  const [error, setError] = useState("")
+  const [sending, setSending] = useState(false)
+  const [saved, setSaved] = useState(false)
 
-  const canSubmit = movies.length > 0 && movies.every((movie) => choices[movie.id]);
+  const canSubmit = movies.length > 0 && movies.every((movie) => Boolean(choices[movie.id]))
 
   const load = useCallback(
     async (signal: AbortSignal) => {
-      setStatus("loading");
-      setSaved(false);
+      setStatus("loading")
+      setSaved(false)
       try {
-        const round = await api<RoundResponse>("/api/games/movie-choice/round", { signal });
-        if (signal.aborted) return;
-        setMovies(round.movies);
-        clearChoices();
-        setError("");
-        setStatus(round.finished ? "finished" : "ready");
+        const round = await api<RoundResponse>("/api/games/movie-choice/round", { signal })
+        if (signal.aborted) return
+        setMovies(round.movies)
+        clearChoices()
+        setError("")
+        setStatus(round.finished ? "finished" : "ready")
       } catch (caught) {
-        if (signal.aborted || (caught instanceof DOMException && caught.name === "AbortError")) return;
-        setStatus("error");
-        setError(caught instanceof ApiRequestError ? caught.message : copy.internal);
+        if (signal.aborted || (caught instanceof DOMException && caught.name === "AbortError")) return
+        setStatus("error")
+        setError(caught instanceof ApiRequestError ? caught.message : copy.internal)
       }
     },
     [clearChoices],
-  );
+  )
 
   useEffect(() => {
-    if (!ready) return;
-    const controller = new AbortController();
+    if (!ready) return
+    const controller = new AbortController()
     const timeout = window.setTimeout(() => {
-      void load(controller.signal);
-    }, 0);
+      void load(controller.signal)
+    }, 0)
     return () => {
-      window.clearTimeout(timeout);
-      controller.abort();
-    };
-  }, [ready, load]);
+      window.clearTimeout(timeout)
+      controller.abort()
+    }
+  }, [ready, load])
 
   const submit = useCallback(async () => {
-    if (!canSubmit || sending) return;
-    setSending(true);
-    setError("");
+    if (!canSubmit || sending) return
+    setSending(true)
+    setError("")
     try {
-      mainButton.showLoader();
+      mainButton.showLoader()
     } catch {
       // ignore outside Telegram
     }
@@ -75,80 +75,100 @@ export default function MovieChoicePage() {
         body: JSON.stringify({
           votes: movies.map((movie) => ({ movieId: movie.id, choice: choices[movie.id] })),
         }),
-      });
-      haptic("success");
-      setSaved(true);
+      })
+      haptic("success")
+      setSaved(true)
       window.setTimeout(() => {
-        setMovies(result.next.movies);
-        clearChoices();
-        setSaved(false);
-        setStatus(result.next.finished ? "finished" : "ready");
-      }, 700);
+        setMovies(result.next.movies)
+        clearChoices()
+        setSaved(false)
+        setStatus(result.next.finished ? "finished" : "ready")
+      }, 700)
     } catch (caught) {
-      haptic("error");
-      setError(caught instanceof ApiRequestError ? caught.message : copy.internal);
+      haptic("error")
+      setError(caught instanceof ApiRequestError ? caught.message : copy.internal)
     } finally {
-      setSending(false);
+      setSending(false)
       try {
-        mainButton.hideLoader();
+        mainButton.hideLoader()
       } catch {
         // ignore
       }
     }
-  }, [canSubmit, sending, movies, choices, haptic, mainButton, clearChoices]);
+  }, [canSubmit, sending, movies, choices, haptic, mainButton, clearChoices])
+
+  const submitRef = useRef(submit)
+  submitRef.current = submit
 
   useEffect(() => {
-    if (!isTelegram) return;
-    const goHome = () => router.push("/");
+    if (!isTelegram) return
+    const goHome = () => router.push("/")
     try {
-      backButton.show();
-      backButton.onClick(goHome);
+      backButton.show()
+      backButton.onClick(goHome)
     } catch {
-      return;
+      return
     }
     return () => {
       try {
-        backButton.offClick(goHome);
-        backButton.hide();
+        backButton.offClick(goHome)
+        backButton.hide()
       } catch {
         // ignore
       }
-    };
-  }, [isTelegram, router, backButton]);
+    }
+  }, [isTelegram, router, backButton])
 
+  // Показать MainButton один раз на раунд; не hide/show при каждом выборе — иначе «прыгает».
   useEffect(() => {
     if (!isTelegram || status !== "ready") {
       try {
-        mainButton.hide();
+        mainButton.hide()
       } catch {
         // ignore
       }
-      return;
+      return
     }
+
+    const onClick = () => {
+      void submitRef.current()
+    }
+
     try {
-      mainButton.setText(sending ? copy.sending : copy.confirm);
-      mainButton.show();
-      if (canSubmit && !sending) mainButton.enable();
-      else mainButton.disable();
-      mainButton.onClick(submit);
+      mainButton.setText(copy.confirm)
+      mainButton.disable()
+      mainButton.show()
+      mainButton.onClick(onClick)
     } catch {
-      return;
+      return
     }
+
     return () => {
       try {
-        mainButton.offClick(submit);
-        mainButton.hide();
+        mainButton.offClick(onClick)
+        mainButton.hide()
       } catch {
         // ignore
       }
-    };
-  }, [isTelegram, status, canSubmit, sending, submit, mainButton]);
+    }
+  }, [isTelegram, status, mainButton])
+
+  useEffect(() => {
+    if (!isTelegram || status !== "ready") return
+    try {
+      mainButton.setText(sending ? copy.sending : copy.confirm)
+      if (canSubmit && !sending) mainButton.enable()
+      else mainButton.disable()
+    } catch {
+      // ignore
+    }
+  }, [isTelegram, status, canSubmit, sending, mainButton])
 
   const statusText = useMemo(() => {
-    if (sending) return copy.sending;
-    if (saved) return copy.saved;
-    return "";
-  }, [sending, saved]);
+    if (sending) return copy.sending
+    if (saved) return copy.saved
+    return ""
+  }, [sending, saved])
 
   return (
     <main className="mx-auto flex w-full max-w-lg flex-col gap-3 px-3 py-4">
@@ -173,7 +193,7 @@ export default function MovieChoicePage() {
           </div>
           {statusText ? <p className="text-center text-sm text-[var(--tg-theme-hint-color)]">{statusText}</p> : null}
           {error ? <p className="text-center text-sm">{error}</p> : null}
-          {isTelegram ? null : (
+          {!isTelegram ? (
             <button
               type="button"
               disabled={!canSubmit || sending}
@@ -182,9 +202,9 @@ export default function MovieChoicePage() {
             >
               {sending ? copy.sending : copy.confirm}
             </button>
-          )}
+          ) : null}
         </div>
       ) : null}
     </main>
-  );
+  )
 }

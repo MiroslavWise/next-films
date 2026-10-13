@@ -34,6 +34,7 @@ export const copy = {
   unauthorized: "Нужна авторизация",
   admin: {
     title: "Админка",
+    open: "Админка",
     movies: "Фильмы",
     actors: "Актёры",
     directors: "Режиссёры",

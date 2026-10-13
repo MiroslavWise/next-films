@@ -1,3 +1,4 @@
+import { userFromSessionToken } from "@/lib/session-claims"
 import { useSessionStore } from "@/lib/store/session"
 import type { SessionResponse } from "@/types/api"
 
@@ -18,7 +19,8 @@ async function requestSession(initData: string) {
   if (!response.ok) {
     throw new ApiRequestError(data?.error ?? "Ошибка авторизации", response.status)
   }
-  useSessionStore.getState().setSession(data.token, data.user)
+  const user = userFromSessionToken(data.token, data.user) ?? data.user
+  useSessionStore.getState().setSession(data.token, user)
   return data.token
 }
 

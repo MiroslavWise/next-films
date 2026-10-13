@@ -1,13 +1,33 @@
-import { GameCard } from "@/components/game-card";
-import { copy } from "@/lib/constants";
-import { games } from "@/lib/games";
+"use client"
+
+import Link from "next/link"
+import { GameCard } from "@/components/game-card"
+import { copy } from "@/lib/constants"
+import { games } from "@/lib/games"
+import { userFromSessionToken } from "@/lib/session-claims"
+import { useSessionStore } from "@/lib/store/session"
 
 export default function Home() {
+  const sessionToken = useSessionStore((state) => state.sessionToken)
+  const user = useSessionStore((state) => state.user)
+  const claims = sessionToken ? userFromSessionToken(sessionToken, user) : user
+  const isAdmin = claims?.isAdmin === true
+
   return (
     <main className="mx-auto flex w-full max-w-lg flex-col gap-5 px-4 py-6">
-      <div>
-        <p className="text-sm text-(--tg-theme-hint-color)">{copy.appTitle}</p>
-        <h1 className="mt-1 text-3xl font-semibold tracking-tight">{copy.homeLead}</h1>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-sm text-[var(--tg-theme-hint-color)]">{copy.appTitle}</p>
+          <h1 className="mt-1 text-3xl font-semibold tracking-tight">{copy.homeLead}</h1>
+        </div>
+        {isAdmin ? (
+          <Link
+            href="/admin"
+            className="shrink-0 rounded-full bg-[var(--tg-theme-button-color)] px-4 py-2 text-sm font-semibold text-[var(--tg-theme-button-text-color)]"
+          >
+            {copy.admin.open}
+          </Link>
+        ) : null}
       </div>
       <div className="grid gap-3">
         {games.map((game) => (
@@ -15,5 +35,5 @@ export default function Home() {
         ))}
       </div>
     </main>
-  );
+  )
 }
