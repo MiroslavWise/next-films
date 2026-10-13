@@ -25,8 +25,15 @@ export default function MovieChoicePage() {
   const [error, setError] = useState("")
   const [sending, setSending] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [choiceHint, setChoiceHint] = useState("")
 
-  const canSubmit = movies.length > 0 && movies.every((movie) => Boolean(choices[movie.id]))
+  const selectedChoices = useMemo(
+    () => movies.map((movie) => choices[movie.id]).filter(Boolean) as VoteChoiceName[],
+    [movies, choices],
+  )
+  const hasDuplicateChoice = selectedChoices.length !== new Set(selectedChoices).size
+  const allChosen = movies.length > 0 && movies.every((movie) => Boolean(choices[movie.id]))
+  const canSubmit = allChosen && !hasDuplicateChoice
 
   const load = useCallback(
     async (signal: AbortSignal) => {
@@ -37,6 +44,7 @@ export default function MovieChoicePage() {
         if (signal.aborted) return
         setMovies(round.movies)
         clearChoices()
+        setChoiceHint("")
         setError("")
         setStatus(round.finished ? "finished" : "ready")
       } catch (caught) {
@@ -78,6 +86,7 @@ export default function MovieChoicePage() {
       })
       haptic("success")
       setSaved(true)
+      setChoiceHint("")
       window.setTimeout(() => {
         setMovies(result.next.movies)
         clearChoices()
@@ -170,6 +179,19 @@ export default function MovieChoicePage() {
     return ""
   }, [sending, saved])
 
+  function onMovieChoice(movieId: string, choice: VoteChoiceName) {
+    const takenByOther = movies.some((movie) => movie.id !== movieId && choices[movie.id] === choice)
+    if (takenByOther) {
+      setChoiceHint(copy.duplicateChoice)
+      haptic("error")
+      return
+    }
+    setChoiceHint("")
+    setChoice(movieId, choice)
+  }
+
+  const warningText = hasDuplicateChoice || choiceHint ? copy.duplicateChoice : ""
+
   return (
     <main className="mx-auto flex w-full max-w-lg flex-col gap-4 px-3 py-4">
       <header className="border-b border-(--surface-border) pb-3">
@@ -188,13 +210,15 @@ export default function MovieChoicePage() {
                 key={movie.id}
                 movie={movie}
                 choice={choices[movie.id] as VoteChoiceName | undefined}
+                takenChoices={selectedChoices}
                 disabled={sending}
-                onChoice={(choice) => setChoice(movie.id, choice)}
+                onChoice={(choice) => onMovieChoice(movie.id, choice)}
               />
             ))}
           </div>
           {statusText ? <p className="text-center text-sm text-(--tg-theme-hint-color)">{statusText}</p> : null}
           {error ? <p className="text-center text-sm text-(--danger)">{error}</p> : null}
+          {warningText ? <p className="text-center text-sm text-(--danger)">{warningText}</p> : null}
           {!isTelegram ? (
             <button
               type="button"

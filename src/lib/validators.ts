@@ -16,7 +16,10 @@ export const voteBodySchema = z
   })
   .refine((body) => new Set(body.votes.map((vote) => vote.movieId)).size === body.votes.length, {
     message: "Фильмы в одном запросе не должны повторяться",
-  });
+  })
+  .refine((body) => new Set(body.votes.map((vote) => vote.choice)).size === body.votes.length, {
+    message: "Один вариант можно выбрать только для одного фильма",
+  })
 
 const idList = z.array(uuid).default([]);
 

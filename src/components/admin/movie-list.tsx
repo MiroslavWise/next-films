@@ -6,6 +6,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { AdminFrame, FormMessage } from "@/components/admin/admin-frame"
 import { MovieListSkeleton } from "@/components/admin/admin-skeletons"
 import { BlurImage } from "@/components/blur-image"
+import { VoteCounts } from "@/components/vote-counts"
 import { adminKeys, useMoviesPageQuery } from "@/lib/admin-queries"
 import { ApiRequestError, api } from "@/lib/api-client"
 import { copy } from "@/lib/constants"
@@ -71,9 +72,11 @@ export function MovieList() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="font-semibold tracking-tight">{movie.title}</p>
-                  <p className="mt-1 text-xs text-(--tg-theme-hint-color)">
-                    {movie.watchManyCount} / {movie.onceEnoughCount} / {movie.removeFromIndustryCount}
-                  </p>
+                  <VoteCounts
+                    many={movie.watchManyCount}
+                    once={movie.onceEnoughCount}
+                    remove={movie.removeFromIndustryCount}
+                  />
                   <div className="mt-3 flex gap-4">
                     <Link href={`/admin/movies/${movie.id}/edit`} className={linkActionClass}>
                       {copy.admin.edit}
