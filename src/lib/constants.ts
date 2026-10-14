@@ -71,6 +71,8 @@ export const copy = {
     frameDeleted: "Кадр удалён",
     frameAdded: "Кадр добавлен",
     framesAdded: "Кадры добавлены",
+    frameDeleteTitle: "Удалить кадр?",
+    frameDeleteMessage: "Кадр будет удалён из игры и из хранилища.",
     actors: "Актёры",
     actorAdd: "Добавить актёра",
     actorEdit: "Изменить актёра",

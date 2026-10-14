@@ -7,6 +7,7 @@ import {
   initData,
   mainButton,
   miniApp,
+  popup,
   retrieveRawInitData,
   swipeBehavior,
   themeParams,
@@ -14,6 +15,7 @@ import {
 } from "@tma.js/sdk"
 import { type ReactNode, useEffect } from "react"
 import { ensureSession } from "@/lib/api-client"
+import { copy } from "@/lib/constants"
 import { useSessionStore } from "@/lib/store/session"
 
 const cssMap = [
@@ -162,6 +164,23 @@ export function useTelegramUi() {
       } catch {
         // ignore
       }
+    },
+    /** Нативная модалка Mini App; вне Telegram — window.confirm. */
+    confirm: async (options: { title?: string; message: string; confirmText?: string; cancelText?: string }) => {
+      const confirmId = "ok"
+      try {
+        if (isTelegram && popup.isSupported()) {
+          const pressed = await popup.show({
+            title: options.title,
+            message: options.message,
+            buttons: [{ id: confirmId, type: "destructive", text: options.confirmText ?? copy.admin.delete }, { type: "cancel" }],
+          })
+          return pressed === confirmId
+        }
+      } catch {
+        // fallback ниже
+      }
+      return window.confirm(options.title ? `${options.title}\n${options.message}` : options.message)
     },
     mainButton,
     backButton,
