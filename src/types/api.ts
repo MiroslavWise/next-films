@@ -241,3 +241,86 @@ export type FrameGuessInsufficientResponse = {
   entries: number
   movies: number
 }
+
+export type FrameRevealOption = {
+  movieId: string
+  title: string
+}
+
+export type FrameRevealRoundPublic = {
+  id: string
+  imageUrl: string
+  imageBlurhash: string
+  cols: number
+  rows: number
+  openedCells: number[]
+  revealCount: number
+  canRevealMore: boolean
+  options: FrameRevealOption[]
+}
+
+export type FrameRevealRoundAnswered = FrameRevealRoundPublic & {
+  chosenMovieId: string
+  isCorrect: boolean
+  correctMovieId: string
+  correctTitle: string
+  answeredAt: string
+}
+
+export type FrameRevealSessionResponse = {
+  id: string
+  status: "ACTIVE" | "ENDED"
+  correctCount: number
+  answeredCount: number
+  createdAt: string
+  updatedAt: string
+  endedAt: string | null
+  currentRound: FrameRevealRoundPublic | null
+}
+
+export type FrameRevealCurrentResponse = {
+  session: FrameRevealSessionResponse
+  resumed?: boolean
+}
+
+export type FrameRevealHistoryItem = {
+  id: string
+  createdAt: string
+  endedAt: string | null
+  correctCount: number
+  answeredCount: number
+  preview: { imageUrl: string; imageBlurhash: string } | null
+}
+
+export type FrameRevealHistoryResponse = {
+  sessions: FrameRevealHistoryItem[]
+}
+
+export type FrameRevealSessionDetailResponse = {
+  session: FrameRevealSessionResponse & {
+    rounds: FrameRevealRoundAnswered[]
+  }
+}
+
+export type FrameRevealAnswerResponse = {
+  session: FrameRevealSessionResponse
+  answered: FrameRevealRoundAnswered
+  nextRound: FrameRevealRoundPublic | null
+  insufficientNext?: boolean
+}
+
+export type FrameRevealRevealResponse = {
+  round: FrameRevealRoundPublic
+}
+
+export type FrameRevealFinishResponse = {
+  ok: true
+  action: "home" | "restart"
+  session: FrameRevealSessionResponse | null
+}
+
+export type FrameRevealInsufficientResponse = {
+  insufficient: true
+  entries: number
+  movies: number
+}

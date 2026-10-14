@@ -39,7 +39,8 @@ export const games: Game[] = [
     slug: "frame-reveal",
     title: "Прояви кадр",
     description: "Кадр открывается клетками 16×9: угадайте фильм из четырёх вариантов, открывая ещё части.",
-    status: GameStatus.Soon,
+    href: "/games/frame-reveal",
+    status: GameStatus.Active,
   },
   {
     slug: "quotes",

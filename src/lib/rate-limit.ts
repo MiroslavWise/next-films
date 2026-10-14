@@ -3,7 +3,7 @@ import { Redis } from "@upstash/redis"
 import { copy } from "@/lib/constants"
 import { clientIp, jsonError } from "@/lib/http"
 
-type Bucket = "round" | "vote" | "photo" | "playoff" | "frameGuess"
+type Bucket = "round" | "vote" | "photo" | "playoff" | "frameGuess" | "frameReveal"
 
 const memoryBuckets = new Map<string, { count: number; resetAt: number }>()
 
@@ -13,6 +13,7 @@ const limits: Record<Bucket, number> = {
   photo: 20,
   playoff: 40,
   frameGuess: 60,
+  frameReveal: 80,
 }
 
 function redisClient() {
@@ -50,6 +51,11 @@ const limiters: Partial<Record<Bucket, Ratelimit>> = redis
         redis,
         limiter: Ratelimit.slidingWindow(limits.frameGuess, "1 m"),
         prefix: "next-films:frame-guess",
+      }),
+      frameReveal: new Ratelimit({
+        redis,
+        limiter: Ratelimit.slidingWindow(limits.frameReveal, "1 m"),
+        prefix: "next-films:frame-reveal",
       }),
     }
   : {}

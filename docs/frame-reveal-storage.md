@@ -7,7 +7,7 @@
 - уже есть PostgreSQL + Prisma (`POSTGRES_URL`);
 - каталог кадров — `FrameGuessEntry` (`movieId` unique, `frames` Json: `{ id, url, blurhash }[]`);
 - игра `frame-guess` («Угадай кадр») уже **active**;
-- игра `frame-reveal` в `src/lib/games.ts` — `status: "soon"` (карточка на главной);
+- игра `frame-reveal` в `src/lib/games.ts` — `status: "active"` (`/games/frame-reveal`);
 - медиа — Vercel Blob + `/api/media/…`; вторую БД / новый Blob store не создавать.
 
 ---
@@ -106,7 +106,10 @@ model FrameRevealRound {
   correctTitle   String
   /// [{ "movieId", "title" }, ...] — уже перемешанные
   options        Json
-  /// Индексы открытых клеток 0..143
+  /// Размер сетки на момент раунда (история не зависит от смены констант)
+  cols           Int       @default(16)
+  rows           Int       @default(9)
+  /// Индексы открытых клеток 0..(cols*rows-1) — снимок для детальной истории
   openedCells    Json
   /// Сколько раз нажали «открыть ещё» (openedCells.length - 1 на старте)
   revealCount    Int       @default(0)

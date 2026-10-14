@@ -136,6 +136,7 @@ model TelegramUser {
   votes        Vote[]
   playoffs     PlayoffTournament[]
   frameGuessSessions FrameGuessSession[]
+  frameRevealSessions FrameRevealSession[]
 }
 
 model Vote {
@@ -233,6 +234,60 @@ model FrameGuessRound {
   answeredAt     DateTime?
 
   session FrameGuessSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId, createdAt])
+  @@index([userId, createdAt])
+  @@index([sessionId, answeredAt])
+}
+
+enum FrameRevealSessionStatus {
+  ACTIVE
+  ENDED
+}
+
+/// Партия «Прояви кадр»
+model FrameRevealSession {
+  id            String                   @id @default(uuid(7)) @db.Uuid
+  userId        String
+  status        FrameRevealSessionStatus @default(ACTIVE)
+  correctCount  Int                      @default(0)
+  answeredCount Int                      @default(0)
+  createdAt     DateTime                 @default(now())
+  updatedAt     DateTime                 @updatedAt
+  endedAt       DateTime?
+
+  user   TelegramUser       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rounds FrameRevealRound[]
+
+  @@index([userId, status])
+  @@index([userId, createdAt])
+}
+
+/// Раунд с сеткой; openedCells — снимок на момент ответа (для истории)
+model FrameRevealRound {
+  id             String    @id @default(uuid(7)) @db.Uuid
+  sessionId      String    @db.Uuid
+  userId         String
+  frameId        String
+  imageUrl       String
+  imageBlurhash  String
+  correctMovieId String    @db.Uuid
+  correctTitle   String
+  /// [{ "movieId", "title" }, ...]
+  options        Json
+  /// Размер сетки на момент раунда (история не ломается при смене констант)
+  cols           Int       @default(16)
+  rows           Int       @default(9)
+  /// Индексы открытых клеток 0..(cols*rows-1), row-major
+  openedCells    Json
+  /// Число нажатий «открыть ещё» (= openedCells.length - 1)
+  revealCount    Int       @default(0)
+  chosenMovieId  String?   @db.Uuid
+  isCorrect      Boolean?
+  createdAt      DateTime  @default(now())
+  answeredAt     DateTime?
+
+  session FrameRevealSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 
   @@index([sessionId, createdAt])
   @@index([userId, createdAt])
