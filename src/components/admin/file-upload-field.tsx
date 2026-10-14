@@ -8,7 +8,10 @@ type Props = {
   fileName?: string | null
   accept?: string
   resetKey?: string | number
+  multiple?: boolean
+  disabled?: boolean
   onChange: (file: File | null) => void
+  onFilesChange?: (files: File[]) => void
 }
 
 export function FileUploadField({
@@ -17,10 +20,13 @@ export function FileUploadField({
   fileName,
   accept = "image/jpeg,image/jpg,image/png,image/x-png,image/webp,image/avif,image/gif,.jpg,.jpeg,.png,.webp,.avif,.gif",
   resetKey = 0,
+  multiple = false,
+  disabled = false,
   onChange,
+  onFilesChange,
 }: Props) {
   return (
-    <label className="grid gap-2 text-sm">
+    <label className={`grid gap-2 text-sm ${disabled ? "pointer-events-none opacity-40" : ""}`}>
       <span className="font-medium">
         {label}
         {hint ? <span className="ml-1.5 text-[0.7rem] font-normal text-(--tg-theme-hint-color)">{hint}</span> : null}
@@ -38,7 +44,14 @@ export function FileUploadField({
           className="sr-only"
           type="file"
           accept={accept}
-          onChange={(event) => onChange(event.target.files?.[0] ?? null)}
+          multiple={multiple}
+          disabled={disabled}
+          onChange={(event) => {
+            const list = event.target.files
+            const files = list ? Array.from(list) : []
+            onChange(files[0] ?? null)
+            onFilesChange?.(files)
+          }}
         />
       </span>
     </label>

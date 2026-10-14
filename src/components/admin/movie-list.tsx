@@ -85,9 +85,12 @@ export function MovieList() {
                     in2={movie.playoffIn2Count}
                     victory={movie.playoffVictoryCount}
                   />
-                  <div className="mt-3 flex gap-4">
+                  <div className="mt-3 flex flex-wrap gap-4">
                     <Link href={`/admin/movies/${movie.id}/edit`} className={linkActionClass}>
                       {copy.admin.edit}
+                    </Link>
+                    <Link href={`/admin/movies/${movie.id}/frames`} className={linkActionClass}>
+                      {copy.admin.frames}
                     </Link>
                     <button
                       type="button"

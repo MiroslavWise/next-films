@@ -6,6 +6,9 @@ import {
   AVIF_QUALITY,
   BLURHASH_X,
   BLURHASH_Y,
+  FRAME_BLURHASH_X,
+  FRAME_BLURHASH_Y,
+  FRAME_MAX_WIDTH,
   MAX_UPLOAD_BYTES,
   PORTRAIT_MAX_WIDTH,
   POSTER_MAX_WIDTH,
@@ -81,7 +84,14 @@ function detectImageMime(buffer: Buffer, declaredType: string, fileName: string)
   return null
 }
 
-export async function storePhoto(file: File, kind: "poster" | "portrait", entityId?: string | null) {
+export type PhotoKind = "poster" | "portrait" | "frame"
+
+export async function storePhoto(
+  file: File,
+  kind: PhotoKind,
+  entityId?: string | null,
+  options?: { movieId?: string | null },
+) {
   const token = blobToken()
   if (!token) {
     return { ok: false as const, status: 500, error: "Хранилище фотографий не настроено" }
@@ -91,7 +101,9 @@ export async function storePhoto(file: File, kind: "poster" | "portrait", entity
   }
 
   const id = entityId && isUuid(entityId) ? entityId : uuidv7()
-  const width = kind === "poster" ? POSTER_MAX_WIDTH : PORTRAIT_MAX_WIDTH
+  const width = kind === "poster" ? POSTER_MAX_WIDTH : kind === "frame" ? FRAME_MAX_WIDTH : PORTRAIT_MAX_WIDTH
+  const blurX = kind === "frame" ? FRAME_BLURHASH_X : BLURHASH_X
+  const blurY = kind === "frame" ? FRAME_BLURHASH_Y : BLURHASH_Y
   const input = Buffer.from(await file.arrayBuffer())
   const detected = detectImageMime(input, file.type || "", file.name || "")
   if (!detected) {
@@ -105,7 +117,7 @@ export async function storePhoto(file: File, kind: "poster" | "portrait", entity
     .removeAlpha()
 
   const { data, info } = await base.clone().ensureAlpha().raw().toBuffer({ resolveWithObject: true })
-  const blurhash = encode(new Uint8ClampedArray(data), info.width, info.height, BLURHASH_X, BLURHASH_Y)
+  const blurhash = encode(new Uint8ClampedArray(data), info.width, info.height, blurX, blurY)
   const avif = await base
     .avif({
       quality: AVIF_QUALITY,
@@ -114,8 +126,9 @@ export async function storePhoto(file: File, kind: "poster" | "portrait", entity
     })
     .toBuffer()
 
-  const folder = kind === "poster" ? "posters" : "people"
-  const pathname = `${folder}/${id}.avif`
+  const movieId = options?.movieId && isUuid(options.movieId) ? options.movieId : null
+  const pathname =
+    kind === "frame" && movieId ? `frame-guess/${movieId}/${id}.avif` : kind === "poster" ? `posters/${id}.avif` : `people/${id}.avif`
   const blob = await put(pathname, avif, {
     access: "private",
     contentType: "image/avif",

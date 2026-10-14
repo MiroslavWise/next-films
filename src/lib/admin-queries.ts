@@ -5,7 +5,7 @@ import { api, uploadPhoto } from "@/lib/api-client"
 import { ADMIN_ACTORS_PAGE_SIZE, ADMIN_MOVIES_PAGE_SIZE } from "@/lib/constants"
 import { useTelegram } from "@/lib/telegram/use-telegram"
 import type { PersonKind } from "@/lib/validators"
-import type { MovieRecord, NamedRef, PersonRecord } from "@/types/api"
+import type { FrameGuessEntryRecord, MovieRecord, NamedRef, PersonRecord } from "@/types/api"
 
 export type MoviesPage = {
   movies: MovieRecord[]
@@ -33,6 +33,7 @@ export const adminKeys = {
   movies: () => [...adminKeys.all, "movies"] as const,
   moviesPage: (page: number) => [...adminKeys.movies(), "page", page] as const,
   movie: (id: string) => [...adminKeys.all, "movie", id] as const,
+  frameGuess: (movieId: string) => [...adminKeys.all, "frame-guess", movieId] as const,
 }
 
 async function fetchGenres() {
@@ -145,6 +146,29 @@ export function useMovieQuery(id: string | undefined, enabled = true) {
     queryKey: adminKeys.movie(id ?? ""),
     queryFn: () => fetchMovie(id!),
     enabled: ready && enabled && Boolean(id),
+  })
+}
+
+async function fetchFrameGuessEntry(movieId: string) {
+  const data = await api<{ entry: FrameGuessEntryRecord }>(`/api/admin/movies/${movieId}/frame-guess`)
+  return data.entry
+}
+
+export function useFrameGuessEntryQuery(movieId: string | undefined, enabled = true) {
+  const { ready } = useTelegram()
+  return useQuery({
+    queryKey: adminKeys.frameGuess(movieId ?? ""),
+    queryFn: () => fetchFrameGuessEntry(movieId!),
+    enabled: ready && enabled && Boolean(movieId),
+  })
+}
+
+export async function uploadFrameGuessFrame(movieId: string, file: File) {
+  const body = new FormData()
+  body.set("file", file)
+  return api<{ entry: FrameGuessEntryRecord }>(`/api/admin/movies/${movieId}/frame-guess/frames`, {
+    method: "POST",
+    body,
   })
 }
 

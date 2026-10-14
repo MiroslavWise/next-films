@@ -1,10 +1,11 @@
 import { Prisma } from "@prisma/client";
 import { copy } from "@/lib/constants";
 import { nameKey } from "@/lib/names";
-import { deleteStoredPhoto } from "@/lib/photos";
-import { prisma } from "@/lib/prisma";
-import type { PersonKind } from "@/lib/validators";
-import type { MovieRecord, PersonRecord } from "@/types/api";
+import { deleteFrameGuessBlobsForMovie } from "@/lib/frame-guess"
+import { deleteStoredPhoto } from "@/lib/photos"
+import { prisma } from "@/lib/prisma"
+import type { PersonKind } from "@/lib/validators"
+import type { MovieRecord, PersonRecord } from "@/types/api"
 
 const movieInclude = {
   genres: { include: { genre: true } },
@@ -192,11 +193,12 @@ export async function updateMovie(id: string, input: MovieInput) {
 }
 
 export async function deleteMovie(id: string) {
-  const current = await prisma.movie.findUnique({ where: { id } });
-  if (!current) return { ok: false as const, status: 404, error: copy.notFound };
-  await prisma.movie.delete({ where: { id } });
-  await deleteStoredPhoto(current.posterUrl);
-  return { ok: true as const };
+  const current = await prisma.movie.findUnique({ where: { id } })
+  if (!current) return { ok: false as const, status: 404, error: copy.notFound }
+  await deleteFrameGuessBlobsForMovie(id)
+  await prisma.movie.delete({ where: { id } })
+  await deleteStoredPhoto(current.posterUrl)
+  return { ok: true as const }
 }
 
 export async function listGenres() {

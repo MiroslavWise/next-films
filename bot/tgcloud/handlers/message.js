@@ -2,7 +2,7 @@ import { api, fetch } from "sdk"
 
 const APP_URL = "https://next-films-mu.vercel.app"
 
-export default async function (message) {
+export default async function handleMessage(message) {
   if (message.text !== "/start") return
 
   let total = null

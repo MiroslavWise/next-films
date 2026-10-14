@@ -151,3 +151,19 @@ export type MovieRecord = {
   directors: PersonRecord[]
   producers: PersonRecord[]
 }
+
+export type FrameGuessFrame = {
+  id: string
+  url: string
+  blurhash: string
+}
+
+export type FrameGuessEntryRecord = {
+  id: string | null
+  movieId: string
+  movieTitle: string
+  frames: FrameGuessFrame[]
+  isActive: boolean
+  createdAt: string | null
+  updatedAt: string | null
+}

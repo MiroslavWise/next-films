@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { useEffect, useState, type FormEvent } from "react"
 import { AdminFrame, FormMessage } from "@/components/admin/admin-frame"
 import { MovieFormSkeleton } from "@/components/admin/admin-skeletons"
@@ -7,7 +8,7 @@ import { FileUploadField } from "@/components/admin/file-upload-field"
 import { useCatalogRefsQuery, useMovieQuery, useSaveMovieMutation } from "@/lib/admin-queries"
 import { ApiRequestError } from "@/lib/api-client"
 import { copy } from "@/lib/constants"
-import { buttonClass, fieldClass, panelClass } from "@/lib/ui"
+import { buttonClass, fieldClass, ghostButtonClass, panelClass } from "@/lib/ui"
 import { uuidv7 } from "@/lib/uuid"
 
 function toggle(ids: string[], id: string) {
@@ -146,6 +147,11 @@ export function MovieForm({ mode, movieId }: { mode: "create" | "edit"; movieId?
             <button className={buttonClass} type="submit" disabled={saveMutation.isPending}>
               {mode === "edit" ? copy.admin.save : copy.admin.add}
             </button>
+            {mode === "edit" && movieId ? (
+              <Link href={`/admin/movies/${movieId}/frames`} className={ghostButtonClass}>
+                {copy.admin.frames}
+              </Link>
+            ) : null}
           </div>
         </form>
       ) : null}

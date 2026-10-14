@@ -40,6 +40,7 @@ model Movie {
   producers         MovieProducer[]
   votes             Vote[]
   playoffFinalists  PlayoffTournament[] @relation("PlayoffFinalist")
+  frameGuessEntry   FrameGuessEntry?
 }
 
 model Genre {
@@ -174,4 +175,18 @@ model PlayoffTournament {
 
   @@index([userId, status])
   @@index([userId, createdAt])
+}
+
+/// Кадры для игры «Угадай кадр»: одна запись на фильм, frames — JSON-массив { id, url, blurhash }
+model FrameGuessEntry {
+  id        String   @id @default(uuid(7)) @db.Uuid
+  movieId   String   @unique @db.Uuid
+  frames    Json     @default("[]")
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  movie Movie @relation(fields: [movieId], references: [id], onDelete: Cascade)
+
+  @@index([isActive])
 }

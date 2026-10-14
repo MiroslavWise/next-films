@@ -49,6 +49,16 @@ export const copy = {
     movies: "Фильмы",
     movieAdd: "Добавить фильм",
     movieEdit: "Изменить фильм",
+    frames: "Кадры",
+    framesTitle: "Кадры для «Угадай кадр»",
+    framesHint: "Загрузите кадры из фильма. Каждый файл сохранится как AVIF с blurhash.",
+    framesEmpty: "Пока нет кадров",
+    framesAdd: "Добавить кадры",
+    framesActive: "Участвует в игре",
+    framesUploading: "Загрузка…",
+    frameDeleted: "Кадр удалён",
+    frameAdded: "Кадр добавлен",
+    framesAdded: "Кадры добавлены",
     actors: "Актёры",
     actorAdd: "Добавить актёра",
     actorEdit: "Изменить актёра",
@@ -97,6 +107,8 @@ export const MAX_UPLOAD_BYTES = 4 * 1024 * 1024
 /** Для мини-приложения хватает ~800px по ширине; сильнее режет вес. */
 export const POSTER_MAX_WIDTH = 800
 export const PORTRAIT_MAX_WIDTH = 640
+/** Кадры чаще landscape — шире постеров. */
+export const FRAME_MAX_WIDTH = 1280
 /** 1–100; ниже = меньше файл. 38 даёт заметное сжатие без сильной мыльности на постерах. */
 export const AVIF_QUALITY = 38
 /** 0–9; выше = сильнее сжатие, дольше CPU. */
@@ -107,3 +119,6 @@ export const JWT_TTL_SECONDS = 60 * 60 * 12
 // 5×9 близко к пропорции постера 9:16.
 export const BLURHASH_X = 5
 export const BLURHASH_Y = 9
+/** Компоненты blurhash для landscape-кадров (~16:9). */
+export const FRAME_BLURHASH_X = 9
+export const FRAME_BLURHASH_Y = 5
