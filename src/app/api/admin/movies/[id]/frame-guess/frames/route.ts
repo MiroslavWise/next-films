@@ -6,6 +6,8 @@ import { deleteStoredPhoto, storePhoto } from "@/lib/photos"
 import { enforceRateLimit } from "@/lib/rate-limit"
 import { isUuid, uuidv7 } from "@/lib/uuid"
 
+export const maxDuration = 120
+
 type Context = { params: Promise<{ id: string }> }
 
 export async function POST(request: Request, context: Context) {

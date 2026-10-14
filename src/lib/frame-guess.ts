@@ -82,17 +82,20 @@ export async function appendFrameGuessFrame(movieId: string, frame: FrameGuessFr
   const movie = await prisma.movie.findUnique({ where: { id: movieId }, select: { id: true, title: true } })
   if (!movie) return { ok: false as const, status: 404, error: copy.notFound }
 
-  // FOR UPDATE — безопасный параллельный upload нескольких кадров (Promise.all на клиенте)
+  // FOR UPDATE — безопасный параллельный upload / webhook retries (идемпотентно по frame.id)
   const entry = await prisma.$transaction(async (tx) => {
     const locked = await tx.$queryRaw<Array<{ id: string }>>`
       SELECT id FROM "FrameGuessEntry" WHERE "movieId" = ${movieId}::uuid FOR UPDATE
     `
     if (locked[0]) {
       const current = await tx.frameGuessEntry.findUniqueOrThrow({ where: { movieId } })
-      const frames = [...parseFrames(current.frames), frame]
+      const frames = parseFrames(current.frames)
+      if (frames.some((item) => item.id === frame.id)) {
+        return current
+      }
       return tx.frameGuessEntry.update({
         where: { movieId },
-        data: { frames },
+        data: { frames: [...frames, frame] },
       })
     }
     return tx.frameGuessEntry.create({

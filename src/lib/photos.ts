@@ -40,6 +40,14 @@ export function blobStoreOrigin(token = blobToken()) {
   return `https://${match[1].toLowerCase()}.private.blob.vercel-storage.com`
 }
 
+function photoProcessorUrl() {
+  return process.env.PHOTO_PROCESSOR_URL?.trim().replace(/\/$/, "") || ""
+}
+
+function photoProcessorToken() {
+  return process.env.PHOTO_PROCESSOR_TOKEN?.trim() || ""
+}
+
 export async function deleteStoredPhoto(url: string | null | undefined) {
   if (!url || !isBlobUrl(url)) return
   const token = blobToken()
@@ -86,31 +94,84 @@ function detectImageMime(buffer: Buffer, declaredType: string, fileName: string)
 
 export type PhotoKind = "poster" | "portrait" | "frame"
 
-export async function storePhoto(
+type StorePhotoResult =
+  | { ok: true; url: string; blurhash: string; entityId: string }
+  | { ok: false; status: number; error: string }
+
+type ProcessorResponse = {
+  ok?: boolean
+  entityId?: string
+  url?: string
+  blurhash?: string
+  error?: string
+  message?: string
+}
+
+async function storePhotoViaProcessor(
   file: File,
   kind: PhotoKind,
-  entityId?: string | null,
-  options?: { movieId?: string | null },
-) {
-  const token = blobToken()
-  if (!token) {
-    return { ok: false as const, status: 500, error: "Хранилище фотографий не настроено" }
-  }
-  if (file.size > MAX_UPLOAD_BYTES) {
-    return { ok: false as const, status: 400, error: copy.admin.photoTooLarge }
+  entityId: string,
+  movieId: string | null,
+): Promise<StorePhotoResult> {
+  const base = photoProcessorUrl()
+  const token = photoProcessorToken()
+  if (!base || !token) {
+    return { ok: false, status: 500, error: "Photo processor не настроен" }
   }
 
-  const id = entityId && isUuid(entityId) ? entityId : uuidv7()
+  const body = new FormData()
+  body.set("file", file)
+  body.set("kind", kind)
+  body.set("entityId", entityId)
+  if (movieId) body.set("movieId", movieId)
+
+  let response: Response
+  try {
+    response = await fetch(`${base}/v1/process`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+      body,
+      signal: AbortSignal.timeout(120_000),
+    })
+  } catch (error) {
+    console.error("[photos] processor fetch", error)
+    return { ok: false, status: 502, error: "Не удалось связаться с photo processor" }
+  }
+
+  const data = (await response.json().catch(() => null)) as ProcessorResponse | null
+  if (!response.ok || !data?.ok || !data.url || !data.blurhash || !data.entityId) {
+    const message = data?.message || data?.error || copy.internal
+    console.error("[photos] processor error", response.status, data)
+    return {
+      ok: false,
+      status: response.status >= 400 && response.status < 600 ? response.status : 500,
+      error: typeof message === "string" ? message : copy.internal,
+    }
+  }
+
+  return { ok: true, url: data.url, blurhash: data.blurhash, entityId: data.entityId }
+}
+
+async function storePhotoLocal(
+  file: File,
+  kind: PhotoKind,
+  entityId: string,
+  movieId: string | null,
+): Promise<StorePhotoResult> {
+  const token = blobToken()
+  if (!token) {
+    return { ok: false, status: 500, error: "Хранилище фотографий не настроено" }
+  }
+
   const width = kind === "poster" ? POSTER_MAX_WIDTH : kind === "frame" ? FRAME_MAX_WIDTH : PORTRAIT_MAX_WIDTH
   const blurX = kind === "frame" ? FRAME_BLURHASH_X : BLURHASH_X
   const blurY = kind === "frame" ? FRAME_BLURHASH_Y : BLURHASH_Y
   const input = Buffer.from(await file.arrayBuffer())
   const detected = detectImageMime(input, file.type || "", file.name || "")
   if (!detected) {
-    return { ok: false as const, status: 400, error: copy.admin.photoType }
+    return { ok: false, status: 400, error: copy.admin.photoType }
   }
 
-  // resize + сброс метаданных + без альфы → ощутимо меньший AVIF
   const base = sharp(input, { failOn: "none" })
     .rotate()
     .resize({ width, withoutEnlargement: true, fit: "inside" })
@@ -126,9 +187,12 @@ export async function storePhoto(
     })
     .toBuffer()
 
-  const movieId = options?.movieId && isUuid(options.movieId) ? options.movieId : null
   const pathname =
-    kind === "frame" && movieId ? `frame-guess/${movieId}/${id}.avif` : kind === "poster" ? `posters/${id}.avif` : `people/${id}.avif`
+    kind === "frame" && movieId
+      ? `frame-guess/${movieId}/${entityId}.avif`
+      : kind === "poster"
+        ? `posters/${entityId}.avif`
+        : `people/${entityId}.avif`
   const blob = await put(pathname, avif, {
     access: "private",
     contentType: "image/avif",
@@ -137,5 +201,28 @@ export async function storePhoto(
     allowOverwrite: true,
   })
 
-  return { ok: true as const, url: blob.url, blurhash, entityId: id }
+  return { ok: true, url: blob.url, blurhash, entityId }
+}
+
+export async function storePhoto(
+  file: File,
+  kind: PhotoKind,
+  entityId?: string | null,
+  options?: { movieId?: string | null },
+): Promise<StorePhotoResult> {
+  if (file.size > MAX_UPLOAD_BYTES) {
+    return { ok: false, status: 400, error: copy.admin.photoTooLarge }
+  }
+
+  const id = entityId && isUuid(entityId) ? entityId : uuidv7()
+  const movieId = options?.movieId && isUuid(options.movieId) ? options.movieId : null
+  if (kind === "frame" && !movieId) {
+    return { ok: false, status: 400, error: copy.validation }
+  }
+
+  if (photoProcessorUrl() && photoProcessorToken()) {
+    return storePhotoViaProcessor(file, kind, id, movieId)
+  }
+
+  return storePhotoLocal(file, kind, id, movieId)
 }

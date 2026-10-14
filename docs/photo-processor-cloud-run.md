@@ -66,7 +66,7 @@ photo-processor (Cloud Run, Go)
 
 | Параметр | Значение | Примечание |
 | --- | --- | --- |
-| `MAX_UPLOAD_BYTES` | `4 * 1024 * 1024` (4 MiB) | до обработки |
+| `MAX_UPLOAD_BYTES` | `2 * 1024 * 1024` (2 MiB) | до обработки |
 | `POSTER_MAX_WIDTH` | `800` | `kind=poster` |
 | `PORTRAIT_MAX_WIDTH` | `640` | `kind=portrait` |
 | `FRAME_MAX_WIDTH` | `1280` | `kind=frame` |

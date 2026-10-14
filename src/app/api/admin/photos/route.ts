@@ -5,6 +5,8 @@ import { storePhoto } from "@/lib/photos"
 import { enforceRateLimit } from "@/lib/rate-limit"
 import { isUuid } from "@/lib/uuid"
 
+export const maxDuration = 120
+
 export async function POST(request: Request) {
   try {
     const auth = await authenticateAdmin(request)
