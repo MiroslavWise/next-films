@@ -17,6 +17,7 @@ const links = [
   { href: "/admin/directors", label: copy.admin.directors, hint: "Режиссёры" },
   { href: "/admin/producers", label: copy.admin.producers, hint: "Продюсеры" },
   { href: "/admin/genres", label: copy.admin.genres, hint: "Справочник жанров" },
+  { href: "/admin/users", label: copy.admin.users, hint: copy.admin.usersHint },
 ]
 
 export default function AdminPage() {

@@ -30,6 +30,13 @@
 
 Serverless здесь — не замена Vercel, а **дешёвый always-on бот** рядом с Mini App.
 
+### Посетители Mini App (сделано)
+
+- Профили заходов: SQLite `profiles` (`id`, `username`, `firstName`, `lastVisit`) через `endpoints/trackVisit` и `endpoints/listUsers`.
+- Админы для `listUsers`: `bot/tgcloud/lib/admins.js` — **синхронизировать вручную** с `NEXT_ADMIN_IDS`.
+- Postgres `TelegramUser` создаётся только при игровом действии (например голос в movie-choice), не при каждом открытии сессии.
+- Клиент: `telegram-web-app.js` + `src/lib/telegram/serverless-call.ts`; админка `/admin/users`.
+
 ---
 
 ## Что такое Telegram Serverless (сжато)
@@ -164,17 +171,18 @@ URL брать из прод-домена / Vercel, не хардкодить pr
 
 Состояние «кому слали» можно держать в SQLite Serverless (`schema.js`), не трогая Postgres. Каталог фильмов при этом **не дублировать** — в сообщении только текст/кнопка WebApp, без копирования постеров в SQLite.
 
-### 3. Лёгкий прогресс / флаги в SQLite бота
+### 3. Профили посетителей и флаги в SQLite бота
 
-Подходит для эфемерного или бот-специфичного:
+Уже используется для **всех, кто открыл Mini App** (`trackVisit` → `profiles`). Дополнительно подойдёт для:
 
-- `seenTutorial`, `lastOpenedAt`;
-- черновик UI-состояния плей-офф **только если** решите не писать его в Postgres (см. `docs/movie-playoff-storage.md` — там рекомендуем Postgres; Serverless SQLite — запасной вариант для совсем простых флагов).
+- `seenTutorial` и прочих UI-флагов бота;
+- «кому слали напоминание»;
+- черновика UI плей-офф **только если** не пишете его в Postgres (см. `docs/movie-playoff-storage.md`).
 
 Не подходит как source of truth для:
 
 - `Movie` + счётчики;
-- `Vote` с уникальностью и аналитикой;
+- игровых `Vote` / участников игр (они в Postgres по мере игры);
 - админских сущностей и Blob URL.
 
 ### 4. Прокси к Vercel API из handler (осторожно)

@@ -17,7 +17,8 @@ export function isAdmin(userId: string) {
   return ids.includes(userId);
 }
 
-async function upsertTelegramUser(user: TelegramUser) {
+/** Creates/updates Postgres user on game actions only — visitors live in bot SQLite. */
+export async function upsertTelegramUser(user: TelegramUser) {
   await prisma.telegramUser.upsert({
     where: { id: user.id },
     update: {
@@ -56,7 +57,6 @@ export async function createSession(initData: string) {
     return { ok: false as const, response: jsonError(resolved.error, resolved.status) };
   }
 
-  await upsertTelegramUser(resolved.user);
   const admin = isAdmin(resolved.user.id);
   const { token, expiresAt } = await signSessionToken({
     sub: resolved.user.id,

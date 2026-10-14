@@ -176,7 +176,7 @@ function CheckList({
           return (
             <label
               key={item.id}
-              className={`inline-flex cursor-pointer items-center rounded-[var(--radius-sm)] border px-3 py-1.5 text-sm transition-colors ${
+              className={`inline-flex cursor-pointer items-center rounded-sm border px-3 py-1.5 text-sm transition-colors ${
                 active
                   ? "border-(--tg-theme-button-color) bg-[color-mix(in_srgb,var(--tg-theme-button-color)_14%,transparent)] font-medium"
                   : "border-(--surface-border) bg-(--tg-theme-bg-color) text-(--tg-theme-hint-color)"

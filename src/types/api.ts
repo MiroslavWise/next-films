@@ -33,6 +33,17 @@ export type SessionResponse = {
   user: SessionUser;
 };
 
+export type VisitorProfile = {
+  id: number;
+  username: string | null;
+  firstName: string | null;
+  lastVisit: string;
+};
+
+export type ListUsersResponse = {
+  users: VisitorProfile[];
+};
+
 export type ApiError = {
   error: string;
 };

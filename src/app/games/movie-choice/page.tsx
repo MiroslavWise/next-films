@@ -27,10 +27,7 @@ export default function MovieChoicePage() {
   const [saved, setSaved] = useState(false)
   const [choiceHint, setChoiceHint] = useState("")
 
-  const selectedChoices = useMemo(
-    () => movies.map((movie) => choices[movie.id]).filter(Boolean) as VoteChoiceName[],
-    [movies, choices],
-  )
+  const selectedChoices = useMemo(() => movies.map((movie) => choices[movie.id]).filter(Boolean) as VoteChoiceName[], [movies, choices])
   const hasDuplicateChoice = selectedChoices.length !== new Set(selectedChoices).size
   const allChosen = movies.length > 0 && movies.every((movie) => Boolean(choices[movie.id]))
   const canSubmit = allChosen && !hasDuplicateChoice
@@ -197,10 +194,8 @@ export default function MovieChoicePage() {
       <header className="border-b border-(--surface-border) pb-3">
         <h1 className="text-xl font-semibold tracking-tight">{copy.appTitle}</h1>
       </header>
-      {status === "loading" ? <LoadingSkeleton /> : null}
-      {status === "error" ? (
-        <ErrorState message={error || copy.internal} onRetry={() => void load(new AbortController().signal)} />
-      ) : null}
+      {status === "loading" && <LoadingSkeleton />}
+      {status === "error" && <ErrorState message={error || copy.internal} onRetry={() => void load(new AbortController().signal)} />}
       {status === "finished" ? <EmptyState /> : null}
       {status === "ready" ? (
         <div className="grid gap-3">
@@ -224,7 +219,7 @@ export default function MovieChoicePage() {
               type="button"
               disabled={!canSubmit || sending}
               onClick={() => void submit()}
-              className="h-12 rounded-[var(--radius-sm)] bg-(--tg-theme-button-color) text-sm font-semibold text-(--tg-theme-button-text-color) transition-transform active:scale-[0.98] disabled:opacity-40"
+              className="h-12 rounded-sm bg-(--tg-theme-button-color) text-sm font-semibold text-(--tg-theme-button-text-color) transition-transform active:scale-[0.98] disabled:opacity-40"
             >
               {sending ? copy.sending : copy.confirm}
             </button>

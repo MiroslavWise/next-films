@@ -1,6 +1,6 @@
 import { copy } from "@/lib/constants";
 import { jsonError } from "@/lib/http";
-import { authenticate } from "@/lib/auth";
+import { authenticate, upsertTelegramUser } from "@/lib/auth";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { submitVotes } from "@/lib/game/movie-choice";
 import { voteBodySchema } from "@/lib/validators";
@@ -16,6 +16,13 @@ export async function POST(request: Request) {
     if (!parsed.success) {
       return jsonError(parsed.error.issues[0]?.message ?? copy.validation, 400);
     }
+
+    await upsertTelegramUser({
+      id: auth.user.id,
+      username: auth.user.username,
+      firstName: auth.user.firstName,
+      lastName: auth.user.lastName,
+    });
 
     const result = await submitVotes(auth.user.id, parsed.data.votes);
     if (!result.ok) return jsonError(copy.notFound, result.status);

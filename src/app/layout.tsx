@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next"
 import { Manrope } from "next/font/google"
+import Script from "next/script"
 import { QueryProvider } from "@/components/query-provider"
 import { TelegramProvider } from "@/components/telegram-provider"
 import { copy } from "@/lib/constants"
@@ -26,6 +27,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="ru" className={`${manrope.variable} h-full antialiased`} suppressHydrationWarning>
       <body className="flex min-h-full flex-col bg-(--tg-theme-bg-color) font-sans text-(--tg-theme-text-color)">
+        <Script src="https://telegram.org/js/telegram-web-app.js" strategy="beforeInteractive" />
         <TelegramProvider>
           <QueryProvider>{children}</QueryProvider>
         </TelegramProvider>

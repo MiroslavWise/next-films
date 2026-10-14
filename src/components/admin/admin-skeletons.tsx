@@ -1,7 +1,7 @@
 import { panelClass } from "@/lib/ui"
 
 function Bone({ className = "" }: { className?: string }) {
-  return <div className={`skeleton-bone rounded-[var(--radius-sm)] ${className}`} />
+  return <div className={`skeleton-bone rounded-sm ${className}`} />
 }
 
 export function MovieListSkeleton({ rows = 5 }: { rows?: number }) {

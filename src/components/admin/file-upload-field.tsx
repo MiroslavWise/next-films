@@ -24,7 +24,7 @@ export function FileUploadField({
       <span className="font-medium">{label}</span>
       {hint ? <span className="text-xs text-(--tg-theme-hint-color)">{hint}</span> : null}
       <span
-        className={`flex min-h-16 cursor-pointer items-center justify-center rounded-[var(--radius-sm)] border border-dashed px-3 py-3 text-center text-sm transition-colors ${
+        className={`flex min-h-16 cursor-pointer items-center justify-center rounded-sm border border-dashed px-3 py-3 text-center text-sm transition-colors ${
           fileName
             ? "border-(--tg-theme-button-color) bg-[color-mix(in_srgb,var(--tg-theme-button-color)_8%,transparent)] text-(--tg-theme-text-color)"
             : "border-(--surface-border-strong) bg-(--tg-theme-bg-color) text-(--tg-theme-hint-color) hover:border-(--tg-theme-button-color)"
