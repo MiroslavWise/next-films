@@ -31,8 +31,9 @@ export const games: Game[] = [
   {
     slug: "frame-guess",
     title: "Угадай кадр",
-    description: "Один кадр — и нужно назвать фильм.",
-    status: GameStatus.Soon,
+    description: "Один кадр — и нужно назвать фильм из четырёх вариантов.",
+    href: "/games/frame-guess",
+    status: GameStatus.Active,
   },
   {
     slug: "quotes",

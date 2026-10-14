@@ -135,6 +135,7 @@ model TelegramUser {
   lastSeenAt   DateTime @updatedAt
   votes        Vote[]
   playoffs     PlayoffTournament[]
+  frameGuessSessions FrameGuessSession[]
 }
 
 model Vote {
@@ -189,4 +190,51 @@ model FrameGuessEntry {
   movie Movie @relation(fields: [movieId], references: [id], onDelete: Cascade)
 
   @@index([isActive])
+}
+
+enum FrameGuessSessionStatus {
+  ACTIVE
+  ENDED
+}
+
+/// Партия «Угадай кадр» — аналог PlayoffTournament для истории игрока
+model FrameGuessSession {
+  id            String                  @id @default(uuid(7)) @db.Uuid
+  userId        String
+  status        FrameGuessSessionStatus @default(ACTIVE)
+  correctCount  Int                     @default(0)
+  answeredCount Int                     @default(0)
+  createdAt     DateTime                @default(now())
+  updatedAt     DateTime                @updatedAt
+  endedAt       DateTime?
+
+  user   TelegramUser      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rounds FrameGuessRound[]
+
+  @@index([userId, status])
+  @@index([userId, createdAt])
+}
+
+/// Один вопрос внутри партии; снимок кадра/вариантов для истории
+model FrameGuessRound {
+  id             String    @id @default(uuid(7)) @db.Uuid
+  sessionId      String    @db.Uuid
+  userId         String
+  frameId        String
+  imageUrl       String
+  imageBlurhash  String
+  correctMovieId String    @db.Uuid
+  correctTitle   String
+  /// [{ "movieId": "...", "title": "..." }, ...] — уже перемешанные варианты
+  options        Json
+  chosenMovieId  String?   @db.Uuid
+  isCorrect      Boolean?
+  createdAt      DateTime  @default(now())
+  answeredAt     DateTime?
+
+  session FrameGuessSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId, createdAt])
+  @@index([userId, createdAt])
+  @@index([sessionId, answeredAt])
 }

@@ -6,11 +6,7 @@ import { AdminFrame, FormMessage } from "@/components/admin/admin-frame"
 import { MovieFormSkeleton } from "@/components/admin/admin-skeletons"
 import { FileUploadField } from "@/components/admin/file-upload-field"
 import { BlurImage } from "@/components/blur-image"
-import {
-  adminKeys,
-  uploadFrameGuessFrame,
-  useFrameGuessEntryQuery,
-} from "@/lib/admin-queries"
+import { adminKeys, uploadFrameGuessFrame, useFrameGuessEntryQuery } from "@/lib/admin-queries"
 import { ApiRequestError, api } from "@/lib/api-client"
 import { copy } from "@/lib/constants"
 import { dangerActionClass, panelClass } from "@/lib/ui"
@@ -91,11 +87,7 @@ export function FrameGuessForm({ movieId }: { movieId: string }) {
 
   const entry = entryQuery.data
   const busy = uploading || deleteMutation.isPending || activeMutation.isPending
-  const loadError = entryQuery.isError
-    ? entryQuery.error instanceof ApiRequestError
-      ? entryQuery.error.message
-      : copy.internal
-    : ""
+  const loadError = entryQuery.isError ? (entryQuery.error instanceof ApiRequestError ? entryQuery.error.message : copy.internal) : ""
 
   return (
     <AdminFrame
@@ -147,6 +139,8 @@ export function FrameGuessForm({ movieId }: { movieId: string }) {
                       alt={`${copy.admin.frames}: ${entry.movieTitle}`}
                       blurhash={frame.blurhash}
                       sizes="50vw"
+                      orientation="landscape"
+                      objectFit="contain"
                     />
                   </div>
                   <button

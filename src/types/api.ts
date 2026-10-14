@@ -167,3 +167,77 @@ export type FrameGuessEntryRecord = {
   createdAt: string | null
   updatedAt: string | null
 }
+
+export type FrameGuessOption = {
+  movieId: string
+  title: string
+}
+
+export type FrameGuessRoundPublic = {
+  id: string
+  imageUrl: string
+  imageBlurhash: string
+  options: FrameGuessOption[]
+}
+
+export type FrameGuessRoundAnswered = FrameGuessRoundPublic & {
+  chosenMovieId: string
+  isCorrect: boolean
+  correctMovieId: string
+  correctTitle: string
+  answeredAt: string
+}
+
+export type FrameGuessSessionResponse = {
+  id: string
+  status: "ACTIVE" | "ENDED"
+  correctCount: number
+  answeredCount: number
+  createdAt: string
+  updatedAt: string
+  endedAt: string | null
+  currentRound: FrameGuessRoundPublic | null
+}
+
+export type FrameGuessCurrentResponse = {
+  session: FrameGuessSessionResponse
+  resumed?: boolean
+}
+
+export type FrameGuessHistoryItem = {
+  id: string
+  createdAt: string
+  endedAt: string | null
+  correctCount: number
+  answeredCount: number
+  preview: { imageUrl: string; imageBlurhash: string } | null
+}
+
+export type FrameGuessHistoryResponse = {
+  sessions: FrameGuessHistoryItem[]
+}
+
+export type FrameGuessSessionDetailResponse = {
+  session: FrameGuessSessionResponse & {
+    rounds: FrameGuessRoundAnswered[]
+  }
+}
+
+export type FrameGuessAnswerResponse = {
+  session: FrameGuessSessionResponse
+  answered: FrameGuessRoundAnswered
+  nextRound: FrameGuessRoundPublic | null
+  insufficientNext?: boolean
+}
+
+export type FrameGuessFinishResponse = {
+  ok: true
+  action: "home" | "restart"
+  session: FrameGuessSessionResponse | null
+}
+
+export type FrameGuessInsufficientResponse = {
+  insufficient: true
+  entries: number
+  movies: number
+}

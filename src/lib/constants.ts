@@ -30,6 +30,18 @@ export const copy = {
   playoffFinish: "Завершить",
   playoffFinalist: "Финалист",
   playoffConflict: "Состояние обновилось. Обновляем…",
+  frameGuessTitle: "Угадай кадр",
+  frameGuessPick: "Какой это фильм?",
+  frameGuessCorrect: "Верно",
+  frameGuessWrong: "Неверно",
+  frameGuessScore: "Счёт",
+  frameGuessNewGame: "Новая игра",
+  frameGuessPlayNew: "Сыграть новую",
+  frameGuessFinish: "Завершить",
+  frameGuessHistoryEmpty: "Пока нет сыгранных партий",
+  frameGuessBackToList: "К списку",
+  frameGuessEmptyText: "Нужны кадры хотя бы у одного фильма и минимум 4 фильма в каталоге.",
+  frameGuessAnswered: "Ответов",
   backHome: "На главную",
   choices: {
     WATCH_MANY: "Смотреть много раз",
@@ -122,3 +134,6 @@ export const BLURHASH_Y = 9
 /** Компоненты blurhash для landscape-кадров (~16:9). */
 export const FRAME_BLURHASH_X = 9
 export const FRAME_BLURHASH_Y = 5
+/** Разрешение canvas превью blurhash (react-blurhash), не путать с компонентами encode. */
+export const BLURHASH_PREVIEW_PORTRAIT = { x: 32, y: 56 } as const
+export const BLURHASH_PREVIEW_LANDSCAPE = { x: 56, y: 32 } as const
