@@ -17,7 +17,7 @@ export function isAdmin(userId: string) {
   return ids.includes(userId);
 }
 
-/** Creates/updates Postgres user on game actions only — visitors live in bot SQLite. */
+/** Upsert visitor/player profile in Postgres (lastSeenAt обновляется через @updatedAt). */
 export async function upsertTelegramUser(user: TelegramUser) {
   await prisma.telegramUser.upsert({
     where: { id: user.id },
@@ -34,7 +34,7 @@ export async function upsertTelegramUser(user: TelegramUser) {
       lastName: user.lastName,
       languageCode: user.languageCode,
     },
-  });
+  })
 }
 
 export function resolveInitUser(initData: string) {
@@ -52,19 +52,21 @@ export function resolveInitUser(initData: string) {
 }
 
 export async function createSession(initData: string) {
-  const resolved = resolveInitUser(initData);
+  const resolved = resolveInitUser(initData)
   if (!resolved.ok) {
-    return { ok: false as const, response: jsonError(resolved.error, resolved.status) };
+    return { ok: false as const, response: jsonError(resolved.error, resolved.status) }
   }
 
-  const admin = isAdmin(resolved.user.id);
+  await upsertTelegramUser(resolved.user)
+
+  const admin = isAdmin(resolved.user.id)
   const { token, expiresAt } = await signSessionToken({
     sub: resolved.user.id,
     username: resolved.user.username,
     firstName: resolved.user.firstName,
     lastName: resolved.user.lastName,
     isAdmin: admin,
-  });
+  })
 
   return {
     ok: true as const,
@@ -79,7 +81,7 @@ export async function createSession(initData: string) {
         isAdmin: admin,
       },
     },
-  };
+  }
 }
 
 function bearerToken(request: Request) {

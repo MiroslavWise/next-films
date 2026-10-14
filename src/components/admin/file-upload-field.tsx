@@ -21,8 +21,10 @@ export function FileUploadField({
 }: Props) {
   return (
     <label className="grid gap-2 text-sm">
-      <span className="font-medium">{label}</span>
-      {hint ? <span className="text-xs text-(--tg-theme-hint-color)">{hint}</span> : null}
+      <span className="font-medium">
+        {label}
+        {hint ? <span className="ml-1.5 text-[0.7rem] font-normal text-(--tg-theme-hint-color)">{hint}</span> : null}
+      </span>
       <span
         className={`flex min-h-16 cursor-pointer items-center justify-center rounded-sm border border-dashed px-3 py-3 text-center text-sm transition-colors ${
           fileName

@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react"
 import { AdminFrame, FormMessage } from "@/components/admin/admin-frame"
 import { RowsListSkeleton } from "@/components/admin/admin-skeletons"
+import { ApiRequestError, api } from "@/lib/api-client"
 import { copy } from "@/lib/constants"
-import { isServerlessAvailable, serverlessCall } from "@/lib/telegram/serverless-call"
 import { useTelegram } from "@/lib/telegram/use-telegram"
 import { panelClass } from "@/lib/ui"
 import type { ListUsersResponse, VisitorProfile } from "@/types/api"
@@ -22,7 +22,7 @@ function formatVisit(value: string) {
 }
 
 export function UserList() {
-  const { ready, isTelegram } = useTelegram()
+  const { ready } = useTelegram()
   const [users, setUsers] = useState<VisitorProfile[] | null>(null)
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(true)
@@ -34,21 +34,13 @@ export function UserList() {
     async function load() {
       setLoading(true)
       setError("")
-      if (!isTelegram || !isServerlessAvailable()) {
-        if (!cancelled) {
-          setUsers([])
-          setError(copy.admin.usersUnavailable)
-          setLoading(false)
-        }
-        return
-      }
       try {
-        const data = await serverlessCall<ListUsersResponse>("listUsers")
+        const data = await api<ListUsersResponse>("/api/admin/users")
         if (!cancelled) setUsers(data.users ?? [])
       } catch (caught) {
         if (!cancelled) {
           setUsers([])
-          setError(caught instanceof Error ? caught.message : copy.internal)
+          setError(caught instanceof ApiRequestError ? caught.message : copy.internal)
         }
       } finally {
         if (!cancelled) setLoading(false)
@@ -59,7 +51,7 @@ export function UserList() {
     return () => {
       cancelled = true
     }
-  }, [ready, isTelegram])
+  }, [ready])
 
   return (
     <AdminFrame title={copy.admin.users}>

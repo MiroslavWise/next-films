@@ -9,6 +9,7 @@ export function VoteCounts({
 }) {
   return (
     <p className="mt-1 text-xs font-medium tabular-nums">
+      <span className="font-normal text-(--tg-theme-hint-color)">Кино-выбор: </span>
       <span className="text-(--choice-many)" title="Много">
         {many}
       </span>

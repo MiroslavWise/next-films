@@ -95,11 +95,11 @@ export type SessionResponse = {
 };
 
 export type VisitorProfile = {
-  id: number;
-  username: string | null;
-  firstName: string | null;
-  lastVisit: string;
-};
+  id: string
+  username: string | null
+  firstName: string | null
+  lastVisit: string
+}
 
 export type ListUsersResponse = {
   users: VisitorProfile[];

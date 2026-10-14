@@ -15,7 +15,6 @@ import {
 import { type ReactNode, useEffect } from "react"
 import { ensureSession } from "@/lib/api-client"
 import { useSessionStore } from "@/lib/store/session"
-import { isServerlessAvailable, serverlessCall } from "@/lib/telegram/serverless-call"
 
 const cssMap = [
   ["bgColor", "--tg-theme-bg-color"],
@@ -128,17 +127,10 @@ export function TelegramProvider({ children }: { children: ReactNode }) {
       })
 
       try {
+        // createSession upsert'ит TelegramUser в Postgres (визит / lastSeenAt)
         await ensureSession()
       } catch {
         // Pages surface API errors themselves.
-      }
-
-      if (isTelegram && isServerlessAvailable()) {
-        try {
-          await serverlessCall("trackVisit")
-        } catch {
-          // Visit tracking must not block the Mini App.
-        }
       }
     }
 

@@ -167,7 +167,8 @@ function CheckList({
   return (
     <fieldset className="grid gap-2">
       <legend className="text-sm font-medium">
-        {title} <span className="font-normal text-(--tg-theme-hint-color)">{copy.admin.optional}</span>
+        {title}{" "}
+        <span className="text-[0.7rem] font-normal text-(--tg-theme-hint-color)">{copy.admin.optional}</span>
       </legend>
       {items.length === 0 ? <p className="text-sm text-(--tg-theme-hint-color)">{copy.admin.emptyList}</p> : null}
       <div className="flex flex-wrap gap-2">

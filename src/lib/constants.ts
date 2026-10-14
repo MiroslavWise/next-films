@@ -57,7 +57,6 @@ export const copy = {
     users: "Пользователи",
     usersHint: "Кто открывал Mini App",
     usersEmpty: "Пока никто не заходил",
-    usersUnavailable: "Список доступен только внутри Telegram",
 
     add: "Добавить",
     save: "Сохранить",
