@@ -53,8 +53,8 @@ export function FrameRevealGrid({
                 isOpen
                   ? "bg-transparent"
                   : dimClosed
-                    ? "bg-[color-mix(in_srgb,var(--tg-theme-bg-color)_72%,transparent)] backdrop-blur-[6px]"
-                    : "bg-[color-mix(in_srgb,var(--tg-theme-bg-color)_65%,transparent)] backdrop-blur-[5px]"
+                    ? "bg-[color-mix(in_srgb,var(--tg-theme-bg-color)_82%,transparent)] backdrop-blur-[14px]"
+                    : "bg-[color-mix(in_srgb,var(--tg-theme-bg-color)_78%,transparent)] backdrop-blur-[12px]"
               }
             />
           )

@@ -276,8 +276,8 @@ model FrameRevealRound {
   /// [{ "movieId", "title" }, ...]
   options        Json
   /// Размер сетки на момент раунда (история не ломается при смене констант)
-  cols           Int       @default(16)
-  rows           Int       @default(9)
+  cols           Int       @default(8)
+  rows           Int       @default(5)
   /// Индексы открытых клеток 0..(cols*rows-1), row-major
   openedCells    Json
   /// Число нажатий «открыть ещё» (= openedCells.length - 1)

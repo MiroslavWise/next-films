@@ -5,8 +5,8 @@ import { getFrameGuessAvailability } from "@/lib/game/frame-guess"
 import { prisma } from "@/lib/prisma"
 import { uuidv7 } from "@/lib/uuid"
 
-export const REVEAL_COLS = 16
-export const REVEAL_ROWS = 9
+export const REVEAL_COLS = 8
+export const REVEAL_ROWS = 5
 export const REVEAL_CELLS = REVEAL_COLS * REVEAL_ROWS
 export const FRAME_REVEAL_OPTIONS = 4
 export const FRAME_REVEAL_DISTRACTORS = FRAME_REVEAL_OPTIONS - 1
