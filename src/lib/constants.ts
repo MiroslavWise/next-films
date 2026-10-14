@@ -113,7 +113,7 @@ export const copy = {
     deleted: "Удалено",
     usedElsewhere: "Сначала уберите связи с фильмами.",
     duplicate: "Такая запись уже есть.",
-    photoTooLarge: "Файл больше 4 МБ.",
+    photoTooLarge: "Файл больше 2 МБ.",
     photoType: "Нужен файл изображения.",
     posterRequired: "Добавьте постер",
     emptyList: "Пока пусто",
@@ -129,7 +129,7 @@ export const ROUND_SIZE = 3
 export const PLAYOFF_SIZE = 32
 export const ADMIN_MOVIES_PAGE_SIZE = 20
 export const ADMIN_ACTORS_PAGE_SIZE = 50
-export const MAX_UPLOAD_BYTES = 4 * 1024 * 1024
+export const MAX_UPLOAD_BYTES = 2 * 1024 * 1024
 /** Для мини-приложения хватает ~800px по ширине; сильнее режет вес. */
 export const POSTER_MAX_WIDTH = 800
 export const PORTRAIT_MAX_WIDTH = 640

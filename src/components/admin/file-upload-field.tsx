@@ -1,6 +1,7 @@
 "use client"
 
-import { copy } from "@/lib/constants"
+import { useEffect, useState } from "react"
+import { MAX_UPLOAD_BYTES, copy } from "@/lib/constants"
 
 type Props = {
   label: string
@@ -25,6 +26,12 @@ export function FileUploadField({
   onChange,
   onFilesChange,
 }: Props) {
+  const [localError, setLocalError] = useState("")
+
+  useEffect(() => {
+    setLocalError("")
+  }, [resetKey])
+
   return (
     <label className={`grid gap-2 text-sm ${disabled ? "pointer-events-none opacity-40" : ""}`}>
       <span className="font-medium">
@@ -47,13 +54,35 @@ export function FileUploadField({
           multiple={multiple}
           disabled={disabled}
           onChange={(event) => {
-            const list = event.target.files
-            const files = list ? Array.from(list) : []
-            onChange(files[0] ?? null)
-            onFilesChange?.(files)
+            const input = event.target
+            const list = input.files
+            const picked = list ? Array.from(list) : []
+            const accepted = picked.filter((file) => file.size <= MAX_UPLOAD_BYTES)
+            const rejected = picked.length - accepted.length
+
+            if (rejected > 0) {
+              setLocalError(copy.admin.photoTooLarge)
+            } else {
+              setLocalError("")
+            }
+
+            if (accepted.length === 0) {
+              input.value = ""
+              onChange(null)
+              onFilesChange?.([])
+              return
+            }
+
+            onChange(accepted[0] ?? null)
+            onFilesChange?.(accepted)
           }}
         />
       </span>
+      {localError ? (
+        <span role="alert" className="text-xs text-(--danger)">
+          {localError}
+        </span>
+      ) : null}
     </label>
   )
 }
