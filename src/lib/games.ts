@@ -19,8 +19,9 @@ export const games: Game[] = [
   {
     slug: "movie-playoff",
     title: "Кино-плей-офф",
-    description: "16 случайных постеров в сетке: каждый раунд выбираете лучший из двух, пока не останется один финалист.",
-    status: "soon",
+    description: "32 случайных постера в сетке: каждый раунд выбираете лучший из двух, пока не останется один финалист.",
+    href: "/games/movie-playoff",
+    status: "active",
   },
   {
     slug: "frame-guess",

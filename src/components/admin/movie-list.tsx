@@ -6,6 +6,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { AdminFrame, FormMessage } from "@/components/admin/admin-frame"
 import { MovieListSkeleton } from "@/components/admin/admin-skeletons"
 import { BlurImage } from "@/components/blur-image"
+import { PlayoffCounts } from "@/components/playoff-counts"
 import { VoteCounts } from "@/components/vote-counts"
 import { adminKeys, useMoviesPageQuery } from "@/lib/admin-queries"
 import { ApiRequestError, api } from "@/lib/api-client"
@@ -76,6 +77,13 @@ export function MovieList() {
                     many={movie.watchManyCount}
                     once={movie.onceEnoughCount}
                     remove={movie.removeFromIndustryCount}
+                  />
+                  <PlayoffCounts
+                    in16={movie.playoffIn16Count}
+                    in8={movie.playoffIn8Count}
+                    in4={movie.playoffIn4Count}
+                    in2={movie.playoffIn2Count}
+                    victory={movie.playoffVictoryCount}
                   />
                   <div className="mt-3 flex gap-4">
                     <Link href={`/admin/movies/${movie.id}/edit`} className={linkActionClass}>

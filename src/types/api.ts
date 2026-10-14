@@ -19,6 +19,67 @@ export type VoteResponse = {
   next: RoundResponse;
 };
 
+export type PlayoffMovieRef = {
+  id: string
+  title: string
+  posterUrl: string
+  posterBlurhash: string
+}
+
+export type PlayoffMatchView = {
+  id: string
+  roundIndex: number
+  slot: number
+  leftMovieId: string | null
+  rightMovieId: string | null
+  winnerMovieId: string | null
+  left: PlayoffMovieRef | null
+  right: PlayoffMovieRef | null
+}
+
+export type PlayoffBracket = {
+  size: 32
+  seedMovieIds: string[]
+  movies: PlayoffMovieRef[]
+  matches: Array<{
+    id: string
+    roundIndex: number
+    slot: number
+    leftMovieId: string | null
+    rightMovieId: string | null
+    winnerMovieId: string | null
+  }>
+}
+
+export type PlayoffTournamentResponse = {
+  id: string
+  status: "GAME" | "PRE_END" | "END"
+  roundIndex: number
+  version: number
+  finalistMovieId: string | null
+  bracket: PlayoffBracket
+  currentMatch: PlayoffMatchView | null
+  finalist: PlayoffMovieRef | null
+  createdAt: string
+  updatedAt: string
+}
+
+export type PlayoffCurrentResponse = {
+  tournament: PlayoffTournamentResponse
+  resumed?: boolean
+}
+
+export type PlayoffInsufficientResponse = {
+  insufficient: true
+  available: number
+}
+
+export type PlayoffFinishResponse = {
+  ok: true
+  action: "home" | "restart"
+  tournament: PlayoffTournamentResponse | null
+}
+
 export type SessionUser = {
   id: string;
   username?: string;
@@ -63,9 +124,14 @@ export type MovieRecord = {
   title: string;
   posterUrl: string;
   posterBlurhash: string;
-  watchManyCount: number;
-  onceEnoughCount: number;
-  removeFromIndustryCount: number;
+  watchManyCount: number
+  onceEnoughCount: number
+  removeFromIndustryCount: number
+  playoffIn16Count: number
+  playoffIn8Count: number
+  playoffIn4Count: number
+  playoffIn2Count: number
+  playoffVictoryCount: number
   genres: NamedRef[];
   actors: PersonRecord[];
   directors: PersonRecord[];

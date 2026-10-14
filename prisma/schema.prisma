@@ -21,14 +21,25 @@ model Movie {
   watchManyCount          Int      @default(0)
   onceEnoughCount         Int      @default(0)
   removeFromIndustryCount Int      @default(0)
+  /// Победы в раунде 1/16 → выход в топ-16
+  playoffIn16Count        Int      @default(0)
+  /// Победы в 1/8 → топ-8
+  playoffIn8Count         Int      @default(0)
+  /// Победы в 1/4 → топ-4
+  playoffIn4Count         Int      @default(0)
+  /// Победы в 1/2 → финал (топ-2)
+  playoffIn2Count         Int      @default(0)
+  /// Победы в финале
+  playoffVictoryCount     Int      @default(0)
   createdAt               DateTime @default(now())
   updatedAt               DateTime @updatedAt
 
-  genres    MovieGenre[]
-  actors    MovieActor[]
-  directors MovieDirector[]
-  producers MovieProducer[]
-  votes     Vote[]
+  genres            MovieGenre[]
+  actors            MovieActor[]
+  directors         MovieDirector[]
+  producers         MovieProducer[]
+  votes             Vote[]
+  playoffFinalists  PlayoffTournament[] @relation("PlayoffFinalist")
 }
 
 model Genre {
@@ -122,6 +133,7 @@ model TelegramUser {
   createdAt    DateTime @default(now())
   lastSeenAt   DateTime @updatedAt
   votes        Vote[]
+  playoffs     PlayoffTournament[]
 }
 
 model Vote {
@@ -137,4 +149,29 @@ model Vote {
   @@unique([userId, movieId])
   @@index([userId])
   @@index([movieId])
+}
+
+enum PlayoffStatus {
+  GAME
+  PRE_END
+  END
+}
+
+model PlayoffTournament {
+  id              String        @id @default(uuid(7)) @db.Uuid
+  userId          String
+  status          PlayoffStatus @default(GAME)
+  /// 0 = 1/16 (32→16) … 4 = финал; при PRE_END/END = 5
+  roundIndex      Int           @default(0)
+  bracket         Json
+  finalistMovieId String?       @db.Uuid
+  version         Int           @default(0)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  user     TelegramUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  finalist Movie?       @relation("PlayoffFinalist", fields: [finalistMovieId], references: [id], onDelete: SetNull)
+
+  @@index([userId, status])
+  @@index([userId, createdAt])
 }

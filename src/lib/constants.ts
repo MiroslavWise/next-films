@@ -20,6 +20,13 @@ export const copy = {
   duplicateChoice: "Один вариант можно выбрать только для одного фильма",
   emptyTitle: "Недостаточно фильмов",
   emptyText: "В каталоге нужно хотя бы три фильма, чтобы начать раунд.",
+  playoffEmptyText: "В каталоге нужно хотя бы 32 фильма, чтобы начать плей-офф.",
+  playoffTitle: "Кино-плей-офф",
+  playoffPick: "Выберите фильм",
+  playoffNewGame: "Новая игра",
+  playoffFinish: "Завершить",
+  playoffFinalist: "Финалист",
+  playoffConflict: "Состояние обновилось. Обновляем…",
   backHome: "На главную",
   choices: {
     WATCH_MANY: "Смотреть много раз",
@@ -81,6 +88,7 @@ export const copy = {
 } as const
 
 export const ROUND_SIZE = 3
+export const PLAYOFF_SIZE = 32
 export const ADMIN_MOVIES_PAGE_SIZE = 20
 export const ADMIN_ACTORS_PAGE_SIZE = 50
 export const MAX_UPLOAD_BYTES = 4 * 1024 * 1024
