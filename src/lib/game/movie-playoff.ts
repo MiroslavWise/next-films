@@ -73,6 +73,14 @@ export type PlayoffTournamentView = {
   updatedAt: string
 }
 
+export type PlayoffHistoryItem = {
+  id: string
+  createdAt: string
+  finalist: PlayoffMovieRef | null
+}
+
+const HISTORY_LIMIT = 50
+
 type MovieRow = {
   id: string
   title: string
@@ -176,6 +184,34 @@ export async function getCurrentTournament(userId: string) {
   const row = await prisma.playoffTournament.findFirst({
     where: { userId, status: { in: activeStatuses } },
     orderBy: { updatedAt: "desc" },
+  })
+  if (!row) return null
+  return toView(row)
+}
+
+function toHistoryItem(row: PlayoffTournament): PlayoffHistoryItem {
+  const bracket = parseBracket(row.bracket)
+  const movies = movieMap(bracket)
+  const finalist = row.finalistMovieId ? (movies.get(row.finalistMovieId) ?? null) : null
+  return {
+    id: row.id,
+    createdAt: row.createdAt.toISOString(),
+    finalist,
+  }
+}
+
+export async function listEndedTournaments(userId: string): Promise<PlayoffHistoryItem[]> {
+  const rows = await prisma.playoffTournament.findMany({
+    where: { userId, status: "END" },
+    orderBy: { createdAt: "desc" },
+    take: HISTORY_LIMIT,
+  })
+  return rows.map(toHistoryItem)
+}
+
+export async function getTournamentForUser(userId: string, tournamentId: string) {
+  const row = await prisma.playoffTournament.findFirst({
+    where: { id: tournamentId, userId },
   })
   if (!row) return null
   return toView(row)

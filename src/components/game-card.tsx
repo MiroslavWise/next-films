@@ -9,11 +9,11 @@ export function GameCard({ game }: { game: Game }) {
   const content = (
     <>
       <div className="flex items-start justify-between gap-2">
-        <span className="inline-flex size-11 shrink-0 items-center justify-center rounded-[var(--radius-sm)] bg-(--tg-theme-bg-color) text-(--tg-theme-button-color) ring-1 ring-(--surface-border)">
+        <span className="inline-flex size-11 shrink-0 items-center justify-center rounded-sm bg-(--tg-theme-bg-color) text-(--tg-theme-button-color) ring-1 ring-(--surface-border)">
           <GameIcon slug={game.slug} className="size-7" />
         </span>
         {!isActive ? (
-          <span className="rounded-[var(--radius-sm)] px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-(--tg-theme-hint-color) ring-1 ring-(--surface-border)">
+          <span className="rounded-sm px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-(--tg-theme-hint-color) ring-1 ring-(--surface-border)">
             {copy.soon}
           </span>
         ) : null}

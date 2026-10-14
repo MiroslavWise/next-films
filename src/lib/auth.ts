@@ -1,20 +1,15 @@
-import { copy } from "@/lib/constants";
-import { jsonError } from "@/lib/http";
-import { signSessionToken, verifySessionToken } from "@/lib/jwt";
-import { prisma } from "@/lib/prisma";
-import {
-  isMockTelegramEnabled,
-  mockTelegramUser,
-  validateInitData,
-  type TelegramUser,
-} from "@/lib/telegram/validate";
+import { copy } from "@/lib/constants"
+import { prisma } from "@/lib/prisma"
+import { jsonError } from "@/lib/http"
+import { signSessionToken, verifySessionToken } from "@/lib/jwt"
+import { isMockTelegramEnabled, mockTelegramUser, validateInitData, type TelegramUser } from "@/lib/telegram/validate"
 
 export function isAdmin(userId: string) {
   const ids = (process.env.NEXT_ADMIN_IDS ?? "")
     .split(",")
     .map((id) => id.trim())
-    .filter(Boolean);
-  return ids.includes(userId);
+    .filter(Boolean)
+  return ids.includes(userId)
 }
 
 /** Upsert visitor/player profile in Postgres (lastSeenAt обновляется через @updatedAt). */
@@ -40,15 +35,15 @@ export async function upsertTelegramUser(user: TelegramUser) {
 export function resolveInitUser(initData: string) {
   if (!initData) {
     if (!isMockTelegramEnabled()) {
-      return { ok: false as const, status: 401 as const, error: copy.openInTelegram };
+      return { ok: false as const, status: 401 as const, error: copy.openInTelegram }
     }
-    return { ok: true as const, user: mockTelegramUser() };
+    return { ok: true as const, user: mockTelegramUser() }
   }
-  const validated = validateInitData(initData);
+  const validated = validateInitData(initData)
   if (!validated.ok) {
-    return { ok: false as const, status: validated.status, error: validated.error };
+    return { ok: false as const, status: validated.status, error: validated.error }
   }
-  return { ok: true as const, user: validated.user };
+  return { ok: true as const, user: validated.user }
 }
 
 export async function createSession(initData: string) {
@@ -85,20 +80,20 @@ export async function createSession(initData: string) {
 }
 
 function bearerToken(request: Request) {
-  const header = request.headers.get("authorization")?.trim() ?? "";
-  if (!header.toLowerCase().startsWith("bearer ")) return "";
-  return header.slice(7).trim();
+  const header = request.headers.get("authorization")?.trim() ?? ""
+  if (!header.toLowerCase().startsWith("bearer ")) return ""
+  return header.slice(7).trim()
 }
 
 export async function authenticate(request: Request) {
-  const token = bearerToken(request);
+  const token = bearerToken(request)
   if (!token) {
-    return { ok: false as const, response: jsonError(copy.unauthorized, 401) };
+    return { ok: false as const, response: jsonError(copy.unauthorized, 401) }
   }
 
-  const claims = await verifySessionToken(token);
+  const claims = await verifySessionToken(token)
   if (!claims) {
-    return { ok: false as const, response: jsonError(copy.sessionExpired, 401) };
+    return { ok: false as const, response: jsonError(copy.sessionExpired, 401) }
   }
 
   return {
@@ -110,14 +105,14 @@ export async function authenticate(request: Request) {
       lastName: claims.lastName,
       isAdmin: claims.isAdmin,
     },
-  };
+  }
 }
 
 export async function authenticateAdmin(request: Request) {
-  const auth = await authenticate(request);
-  if (!auth.ok) return auth;
+  const auth = await authenticate(request)
+  if (!auth.ok) return auth
   if (!auth.user.isAdmin && !isAdmin(auth.user.id)) {
-    return { ok: false as const, response: jsonError(copy.forbidden, 403) };
+    return { ok: false as const, response: jsonError(copy.forbidden, 403) }
   }
-  return auth;
+  return auth
 }

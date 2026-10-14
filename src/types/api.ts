@@ -73,6 +73,16 @@ export type PlayoffCurrentResponse = {
   resumed?: boolean
 }
 
+export type PlayoffHistoryItem = {
+  id: string
+  createdAt: string
+  finalist: PlayoffMovieRef | null
+}
+
+export type PlayoffHistoryResponse = {
+  tournaments: PlayoffHistoryItem[]
+}
+
 export type PlayoffInsufficientResponse = {
   insufficient: true
   available: number

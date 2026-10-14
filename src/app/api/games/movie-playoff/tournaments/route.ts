@@ -1,8 +1,22 @@
 import { authenticate, upsertTelegramUser } from "@/lib/auth"
 import { copy } from "@/lib/constants"
-import { getOrCreateTournament } from "@/lib/game/movie-playoff"
+import { getOrCreateTournament, listEndedTournaments } from "@/lib/game/movie-playoff"
 import { jsonError } from "@/lib/http"
 import { enforceRateLimit } from "@/lib/rate-limit"
+
+export async function GET(request: Request) {
+  try {
+    const auth = await authenticate(request)
+    if (!auth.ok) return auth.response
+    const limited = await enforceRateLimit(request, auth.user.id, "playoff")
+    if (limited) return limited
+
+    const tournaments = await listEndedTournaments(auth.user.id)
+    return Response.json({ tournaments })
+  } catch {
+    return jsonError(copy.internal, 500)
+  }
+}
 
 export async function POST(request: Request) {
   try {
