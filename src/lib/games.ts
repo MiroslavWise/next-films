@@ -3,7 +3,7 @@ export const enum GameStatus {
   Soon = "soon",
 }
 
-export type GameSlug = "movie-choice" | "movie-playoff" | "frame-guess" | "quotes"
+export type GameSlug = "movie-choice" | "movie-playoff" | "frame-guess" | "frame-reveal" | "quotes"
 
 export type Game = {
   slug: GameSlug
@@ -34,6 +34,12 @@ export const games: Game[] = [
     description: "Один кадр — и нужно назвать фильм из четырёх вариантов.",
     href: "/games/frame-guess",
     status: GameStatus.Active,
+  },
+  {
+    slug: "frame-reveal",
+    title: "Прояви кадр",
+    description: "Кадр открывается клетками 16×9: угадайте фильм из четырёх вариантов, открывая ещё части.",
+    status: GameStatus.Soon,
   },
   {
     slug: "quotes",

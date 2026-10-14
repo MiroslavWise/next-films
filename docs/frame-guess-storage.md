@@ -7,7 +7,8 @@
 - уже есть PostgreSQL + Prisma (`POSTGRES_URL`);
 - медиа — Vercel Blob + прокси `/api/media/…`; обработка upload — AVIF + blurhash в `src/lib/photos.ts`;
 - у постеров/фото людей уже есть пара `url` + `blurhash`;
-- игра `frame-guess` в `src/lib/games.ts` пока `status: "soon"`;
+- игра `frame-guess` в `src/lib/games.ts` — `status: "active"` (`/games/frame-guess`);
+- родственная игра `frame-reveal` («Прояви кадр») — см. [frame-reveal-storage.md](./frame-reveal-storage.md);
 - каталог фильмов — `Movie`; вторую БД / Mongo / новый Blob store не создавать.
 
 ---

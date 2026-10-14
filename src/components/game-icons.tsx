@@ -74,6 +74,18 @@ export function FrameGuessIcon(props: IconProps) {
   )
 }
 
+/** Сетка поверх кадра — «Прояви кадр». */
+export function FrameRevealIcon(props: IconProps) {
+  return (
+    <IconShell {...props}>
+      <rect x="6" y="12" width="36" height="24" rx="3" stroke="currentColor" strokeWidth="2" />
+      <path d="M15 12v24M24 12v24M33 12v24M6 20h36M6 28h36" stroke="currentColor" strokeWidth="1.5" opacity="0.55" />
+      <rect x="15" y="20" width="9" height="8" fill="currentColor" opacity="0.35" />
+      <rect x="24" y="12" width="9" height="8" fill="currentColor" opacity="0.2" />
+    </IconShell>
+  )
+}
+
 /** Кавычки реплики — «Киноцитаты». */
 export function QuotesIcon(props: IconProps) {
   return (
@@ -91,6 +103,7 @@ const gameIcons: Record<GameSlug, ComponentType<IconProps>> = {
   "movie-choice": MovieChoiceIcon,
   "movie-playoff": MoviePlayoffIcon,
   "frame-guess": FrameGuessIcon,
+  "frame-reveal": FrameRevealIcon,
   quotes: QuotesIcon,
 }
 
