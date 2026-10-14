@@ -54,7 +54,7 @@ function BracketSlot({
 
   return (
     <div
-      className={`relative h-[18px] w-[12px] shrink-0 overflow-hidden rounded-[1px] border bg-(--tg-theme-secondary-bg-color) ${accentClass} ${ring} ${
+      className={`relative h-4.5 w-3 shrink-0 overflow-hidden rounded-[1px] border bg-(--tg-theme-secondary-bg-color) ${accentClass} ${ring} ${
         state === "eliminated" ? "grayscale opacity-70" : ""
       } ${state === "empty" ? "border-(--surface-border) bg-(--tg-theme-bg-color)" : ""}`}
       title={movie && state !== "hidden" && state !== "empty" ? movie.title : undefined}
@@ -101,10 +101,10 @@ function MatchNode({
   return (
     <div className="relative flex items-center">
       {connector === "right" ? (
-        <div className={`mr-0.5 h-[22px] w-1.5 rounded-l-[1px] border-y border-l ${lineColor}`} aria-hidden />
+        <div className={`mr-0.5 h-5.5 w-1.5 rounded-l-[1px] border-y border-l ${lineColor}`} aria-hidden />
       ) : null}
       <div
-        className={`flex flex-col gap-0.5 rounded-[2px] border px-0.5 py-0.5 ${
+        className={`flex flex-col gap-0.5 rounded-xs border px-0.5 py-0.5 ${
           currentMatch?.id === match.id
             ? "border-(--tg-theme-button-color) bg-[color-mix(in_srgb,var(--tg-theme-button-color)_10%,transparent)]"
             : "border-transparent"
@@ -114,7 +114,7 @@ function MatchNode({
         <BracketSlot movie={right} state={slotState(match.rightMovieId, match, currentMatch)} accent={accent} />
       </div>
       {connector === "left" ? (
-        <div className={`ml-0.5 h-[22px] w-1.5 rounded-r-[1px] border-y border-r ${lineColor}`} aria-hidden />
+        <div className={`ml-0.5 h-5.5 w-1.5 rounded-r-[1px] border-y border-r ${lineColor}`} aria-hidden />
       ) : null}
     </div>
   )
@@ -160,7 +160,7 @@ function ChampionSlot({
     <div className="flex flex-col items-center gap-1">
       <span className="text-[9px] font-semibold uppercase tracking-[0.14em] text-(--tg-theme-button-color)">Playoffs</span>
       <div
-        className={`relative h-7 w-5 overflow-hidden rounded-[2px] border-2 border-(--tg-theme-button-color) bg-(--tg-theme-secondary-bg-color) ${
+        className={`relative h-7 w-5 overflow-hidden rounded-xs border-2 border-(--tg-theme-button-color) bg-(--tg-theme-secondary-bg-color) ${
           revealed && movie ? "" : "opacity-80"
         }`}
         title={revealed && movie ? movie.title : undefined}
@@ -201,8 +201,8 @@ export function PlayoffBracketMini({
   const champion = championId ? (movies.get(championId) ?? null) : null
 
   return (
-    <div className="overflow-x-auto rounded-[var(--radius-sm)] border border-(--surface-border) bg-(--tg-theme-secondary-bg-color) p-2">
-      <div className="mx-auto flex min-h-[320px] min-w-[340px] items-stretch justify-center gap-0.5">
+    <div className="overflow-x-auto rounded-sm border border-(--surface-border) bg-(--tg-theme-secondary-bg-color) p-2">
+      <div className="mx-auto flex min-h-80 min-w-85 items-stretch justify-center gap-0.5">
         {rounds.map((round) => (
           <RoundColumn
             key={`L-${round.roundIndex}`}

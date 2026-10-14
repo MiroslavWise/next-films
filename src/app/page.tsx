@@ -27,7 +27,7 @@ export default function Home() {
           </Link>
         ) : null}
       </header>
-      <div className="grid gap-3">
+      <div className="grid grid-cols-2 gap-3">
         {games.map((game) => (
           <GameCard key={game.slug} game={game} />
         ))}

@@ -1,6 +1,7 @@
-import { z } from "zod";
+import { z } from "zod"
+import { VoteChoiceName } from "@/types/api"
 
-const uuid = z.string().uuid();
+const uuid = z.string().uuid({ version: "v7" })
 
 export const voteBodySchema = z
   .object({
@@ -8,7 +9,7 @@ export const voteBodySchema = z
       .array(
         z.object({
           movieId: uuid,
-          choice: z.enum(["WATCH_MANY", "WATCH_ONCE", "REMOVE"]),
+          choice: z.enum([VoteChoiceName.WATCH_MANY, VoteChoiceName.WATCH_ONCE, VoteChoiceName.REMOVE]),
         }),
       )
       .min(1)
@@ -21,7 +22,7 @@ export const voteBodySchema = z
     message: "Один вариант можно выбрать только для одного фильма",
   })
 
-const idList = z.array(uuid).default([]);
+const idList = z.array(uuid).default([])
 
 export const movieBodySchema = z.object({
   id: uuid.optional(),
@@ -43,8 +44,8 @@ export const personBodySchema = z.object({
 
 export const genreBodySchema = z.object({
   name: z.string().trim().min(1).max(80),
-});
+})
 
-export const personKindSchema = z.enum(["actors", "directors", "producers"]);
+export const personKindSchema = z.enum(["actors", "directors", "producers"])
 
-export type PersonKind = z.infer<typeof personKindSchema>;
+export type PersonKind = z.infer<typeof personKindSchema>

@@ -1,23 +1,27 @@
-export type VoteChoiceName = "WATCH_MANY" | "WATCH_ONCE" | "REMOVE";
+export const enum VoteChoiceName {
+  WATCH_MANY = "WATCH_MANY",
+  WATCH_ONCE = "WATCH_ONCE",
+  REMOVE = "REMOVE",
+}
 
 export type RoundMovie = {
-  id: string;
-  title: string;
-  posterUrl: string;
-  posterBlurhash: string;
-};
+  id: string
+  title: string
+  posterUrl: string
+  posterBlurhash: string
+}
 
 export type RoundResponse = {
-  movies: RoundMovie[];
-  finished: boolean;
-};
+  movies: RoundMovie[]
+  finished: boolean
+}
 
 export type VoteResponse = {
-  ok: true;
-  processed: number;
-  skipped: number;
-  next: RoundResponse;
-};
+  ok: true
+  processed: number
+  skipped: number
+  next: RoundResponse
+}
 
 export type PlayoffMovieRef = {
   id: string
@@ -81,18 +85,18 @@ export type PlayoffFinishResponse = {
 }
 
 export type SessionUser = {
-  id: string;
-  username?: string;
-  firstName?: string;
-  lastName?: string;
-  isAdmin: boolean;
-};
+  id: string
+  username?: string
+  firstName?: string
+  lastName?: string
+  isAdmin: boolean
+}
 
 export type SessionResponse = {
-  token: string;
-  expiresAt: string;
-  user: SessionUser;
-};
+  token: string
+  expiresAt: string
+  user: SessionUser
+}
 
 export type VisitorProfile = {
   id: string
@@ -102,28 +106,28 @@ export type VisitorProfile = {
 }
 
 export type ListUsersResponse = {
-  users: VisitorProfile[];
-};
+  users: VisitorProfile[]
+}
 
 export type ApiError = {
-  error: string;
-};
+  error: string
+}
 
 export type NamedRef = {
-  id: string;
-  name: string;
-};
+  id: string
+  name: string
+}
 
 export type PersonRecord = NamedRef & {
-  photoUrl: string | null;
-  photoBlurhash: string | null;
-};
+  photoUrl: string | null
+  photoBlurhash: string | null
+}
 
 export type MovieRecord = {
-  id: string;
-  title: string;
-  posterUrl: string;
-  posterBlurhash: string;
+  id: string
+  title: string
+  posterUrl: string
+  posterBlurhash: string
   watchManyCount: number
   onceEnoughCount: number
   removeFromIndustryCount: number
@@ -132,8 +136,8 @@ export type MovieRecord = {
   playoffIn4Count: number
   playoffIn2Count: number
   playoffVictoryCount: number
-  genres: NamedRef[];
-  actors: PersonRecord[];
-  directors: PersonRecord[];
-  producers: PersonRecord[];
-};
+  genres: NamedRef[]
+  actors: PersonRecord[]
+  directors: PersonRecord[]
+  producers: PersonRecord[]
+}

@@ -1,9 +1,9 @@
 import { ChoiceButton } from "@/components/choice-button"
 import { BlurImage } from "@/components/blur-image"
 import { copy } from "@/lib/constants"
-import type { RoundMovie, VoteChoiceName } from "@/types/api"
+import { VoteChoiceName, type RoundMovie } from "@/types/api"
 
-const choiceOptions: VoteChoiceName[] = ["WATCH_MANY", "WATCH_ONCE", "REMOVE"]
+const choiceOptions: VoteChoiceName[] = [VoteChoiceName.WATCH_MANY, VoteChoiceName.WATCH_ONCE, VoteChoiceName.REMOVE]
 
 export function MovieCard({
   movie,

@@ -1,12 +1,12 @@
 import { Prisma } from "@prisma/client"
 import { ROUND_SIZE } from "@/lib/constants"
 import { prisma } from "@/lib/prisma"
-import type { RoundMovie, RoundResponse, VoteChoiceName } from "@/types/api"
+import { VoteChoiceName, type RoundMovie, type RoundResponse } from "@/types/api"
 
 const counterField = {
-  WATCH_MANY: "watchManyCount",
-  WATCH_ONCE: "onceEnoughCount",
-  REMOVE: "removeFromIndustryCount",
+  [VoteChoiceName.WATCH_MANY]: "watchManyCount",
+  [VoteChoiceName.WATCH_ONCE]: "onceEnoughCount",
+  [VoteChoiceName.REMOVE]: "removeFromIndustryCount",
 } as const satisfies Record<VoteChoiceName, "watchManyCount" | "onceEnoughCount" | "removeFromIndustryCount">
 
 type RoundMovieRow = RoundMovie
